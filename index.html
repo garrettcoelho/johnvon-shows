@@ -36,6 +36,24 @@ h1{font-family:var(--display);font-size:44px;line-height:1;margin:0;letter-spaci
 .follow{display:flex;gap:10px}.follow .btn{flex:1;font-size:15px;padding:14px}
 .small{color:var(--muted);font-size:13px;text-align:center;margin:0}
 .empty{color:var(--muted);text-align:center;padding:30px 0}
+.sheet{position:fixed;inset:0;background:rgba(0,0,0,.72);display:flex;align-items:flex-end;justify-content:center;z-index:9}
+.sheet[hidden]{display:none}
+.panel{width:100%;max-width:560px;background:var(--panel);border:1px solid var(--line);border-radius:24px 24px 0 0;
+  padding:22px 18px calc(22px + env(safe-area-inset-bottom,0px));display:grid;gap:14px;max-height:92vh;overflow-y:auto}
+.panel h3{font-family:var(--display);font-size:26px;line-height:1.05;margin:0}
+.panel .for{color:var(--gold);font-weight:600;margin:0}
+.panel label{display:grid;gap:6px;font-size:14px;color:var(--muted)}
+.panel input{font:16px var(--ui);color:var(--ink);background:#0f0d14;border:1px solid var(--line);border-radius:12px;padding:13px 12px}
+.panel input:focus-visible{outline:3px solid var(--lilac);outline-offset:1px}
+.seg{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}.seg.three{grid-template-columns:repeat(3,1fr)}
+.seg button{font:600 15px var(--ui);color:var(--ink);background:#0f0d14;border:1px solid var(--line);border-radius:12px;padding:12px 0;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--gold);border-color:var(--gold);color:#1a1400}
+.btn[disabled]{opacity:.5}.err{color:#ff8a95;font-size:14px;margin:0}
+.hp{position:absolute;left:-9999px;width:1px;height:1px;opacity:0}
+.done{text-align:center;display:grid;gap:10px;padding:10px 0}.done b{font-family:var(--display);font-size:28px}
+#gl-body{display:grid;gap:14px}.panel [hidden]{display:none!important}
+.close{justify-self:end;background:none;border:0;color:var(--muted);font-size:15px;cursor:pointer;padding:4px}
+
 </style>
 </head>
 <body>
@@ -53,6 +71,23 @@ h1{font-family:var(--display);font-size:44px;line-height:1;margin:0;letter-spaci
   </div>
   <p class="small">Tampa · St. Pete · Ybor</p>
 </main>
+<div class="sheet" id="gl" hidden role="dialog" aria-modal="true" aria-labelledby="gl-title">
+  <form class="panel" id="gl-form" novalidate>
+    <button type="button" class="close" id="gl-close">Close</button>
+    <div id="gl-body">
+      <h3 id="gl-title">JohnVon's Guest List</h3>
+      <p class="for" id="gl-for"></p>
+      <label>Your name<input name="name" autocomplete="name" required maxlength="80" placeholder="First and last"></label>
+      <label>How many in your group (including you)<div class="seg" data-k="party"><button type="button">1</button><button type="button">2</button><button type="button">3</button><button type="button">4</button><button type="button">5+</button></div></label>
+      <label>Reminder on show day<div class="seg three" data-k="reminder"><button type="button">Text me</button><button type="button">Email me</button><button type="button">No thanks</button></div></label>
+      <label id="gl-contact-wrap" hidden><span id="gl-contact-label">Phone number</span><input name="contact" maxlength="120" id="gl-contact"></label>
+      <input class="hp" name="website" tabindex="-1" autocomplete="off" aria-hidden="true">
+      <p class="err" id="gl-err" hidden></p>
+      <button class="btn gold" type="submit" id="gl-send">Put me on the list</button>
+      <p class="small">Your name only goes to the door. Never shared or posted.</p>
+    </div>
+  </form>
+</div>
 <script>
 (async function () {
   const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;'}[c]));
@@ -83,11 +118,42 @@ h1{font-family:var(--display);font-size:44px;line-height:1;margin:0;letter-spaci
         <div><h2>${esc(s.name)}</h2><p class="meta">${esc(wk)} · ${esc(s.time === 'TBA' ? 'Set time TBA' : s.time)}</p>
         <p class="meta">${esc(s.venue)}</p></div></div>
       ${s.note ? `<p class="note">${esc(s.note)}</p>` : ''}
-      ${rsvp(s) ? `<a class="btn gold" href="${esc(rsvp(s))}">I'm coming</a>` : ''}
+      ${d.guestlist ? `<button type="button" class="btn gold" data-gl="${esc(s.id)}">Get on JohnVon's guest list</button>` : (rsvp(s) ? `<a class="btn gold" href="${esc(rsvp(s))}">I'm coming</a>` : '')}
       <div class="row"><a class="btn" href="${esc(gcal(s))}">Google Calendar</a><a class="btn" href="${esc(ics(s))}" download="johnvon-${esc(s.id)}.ics">Apple Calendar</a></div>
       ${s.map ? `<a class="btn" href="${esc(s.map)}">Directions</a>` : ''}
     </article>`;
   }).join('');
+  // Guest list: our own form, Google Forms stores it (no Google screens for the guest). Names never shown publicly.
+  const gl = document.getElementById('gl'), form = document.getElementById('gl-form'), err = document.getElementById('gl-err');
+  const pick = {party: '', reminder: ''}; let cur = null;
+  form.querySelectorAll('.seg').forEach(seg => seg.querySelectorAll('button').forEach(b => {
+    b.setAttribute('aria-pressed', 'false');
+    b.onclick = () => { seg.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', String(x === b))); pick[seg.dataset.k] = b.textContent;
+      if (seg.dataset.k === 'reminder') { const w = document.getElementById('gl-contact-wrap'), inp = document.getElementById('gl-contact');
+        w.hidden = b.textContent === 'No thanks'; document.getElementById('gl-contact-label').textContent = b.textContent === 'Email me' ? 'Email' : 'Phone number';
+        inp.type = b.textContent === 'Email me' ? 'email' : 'tel'; inp.autocomplete = b.textContent === 'Email me' ? 'email' : 'tel'; } };
+  }));
+  const open = s => { cur = s; document.getElementById('gl-for').textContent = `${s.name} · ${s.venue} · ${new Date(s.date + 'T12:00:00').toLocaleDateString('en-US', {weekday: 'short', month: 'short', day: 'numeric'})} · ${s.time}`;
+    err.hidden = true; gl.hidden = false; form.name.focus(); };
+  document.getElementById('gl-close').onclick = () => { gl.hidden = true; };
+  gl.onclick = e => { if (e.target === gl) gl.hidden = true; };
+  box.querySelectorAll('[data-gl]').forEach(b => b.onclick = () => open(shows.find(s => s.id === b.dataset.gl)));
+  form.onsubmit = async e => {
+    e.preventDefault(); err.hidden = true;
+    const name = form.name.value.trim(), contact = (document.getElementById('gl-contact').value || '').trim();
+    const bad = !name ? 'Add your name.' : !pick.party ? 'How many in your group?' : !pick.reminder ? 'Pick a reminder option.' :
+      (pick.reminder !== 'No thanks' && !contact) ? 'Add where to send the reminder.' : '';
+    if (bad) { err.textContent = bad; err.hidden = false; return; }
+    if (form.website.value) return;   // bot
+    const f = d.guestlist.fields, body = new URLSearchParams();
+    body.append(f.show, `${cur.name} at ${cur.venue} (${cur.date}) [${cur.id}]`); body.append(f.name, name);
+    body.append(f.party, pick.party); body.append(f.reminder, pick.reminder); body.append(f.contact, pick.reminder === 'No thanks' ? '' : contact);
+    const btn = document.getElementById('gl-send'); btn.disabled = true; btn.textContent = 'Adding you...';
+    try {
+      await fetch(d.guestlist.action, {method: 'POST', mode: 'no-cors', body});
+      document.getElementById('gl-body').innerHTML = `<div class="done"><b>You're on the list.</b><p>${esc(name)}${pick.party !== '1' ? ` + ${pick.party === '5+' ? '4 or more' : (Number(pick.party) - 1)}` : ''}<br>${esc(cur.venue)} · ${esc(cur.time)}</p><p class="small">Give your name at the door.</p></div>`;
+    } catch (x) { err.textContent = 'Could not send. Check your connection and try again.'; err.hidden = false; btn.disabled = false; btn.textContent = 'Put me on the list'; }
+  };
 })();
 </script>
 </body>

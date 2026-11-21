@@ -40,5 +40,15 @@
    "map": "https://maps.google.com/?q=169+1st+Ave+N+St+Petersburg+FL",
    "note": "JohnVon on the decks."
   }
- ]
+ ],
+ "guestlist": {
+  "action": "https://docs.google.com/forms/d/e/1FAIpQLSddF_NpiV8BTpXvl65Ihp2EPXqnsVFZlGKD_ANuwcO4I3aS7Q/formResponse",
+  "fields": {
+   "show": "entry.791332651",
+   "name": "entry.404203551",
+   "party": "entry.1519317637",
+   "reminder": "entry.45484728",
+   "contact": "entry.457093932"
+  }
+ }
 }
