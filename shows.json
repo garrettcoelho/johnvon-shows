@@ -42,13 +42,16 @@
   }
  ],
  "guestlist": {
-  "action": "https://docs.google.com/forms/d/e/1FAIpQLSddF_NpiV8BTpXvl65Ihp2EPXqnsVFZlGKD_ANuwcO4I3aS7Q/formResponse",
+  "action": "https://docs.google.com/forms/d/e/1FAIpQLSemNtVVJR_ALW9HdpMKxdoh6595j9Qn0GepzQC7zIbglPflFg/formResponse",
   "fields": {
-   "show": "entry.791332651",
-   "name": "entry.404203551",
-   "party": "entry.1519317637",
-   "reminder": "entry.45484728",
-   "contact": "entry.457093932"
-  }
+   "show": "entry.642213443",
+   "name": "entry.1403087783",
+   "party": "entry.610636910",
+   "phone": "entry.160172416",
+   "email": "entry.1129806680",
+   "optin": "entry.953159873"
+  },
+  "optin_text": "Text me about JohnVon shows",
+  "optin_email": "Email me about JohnVon shows"
  }
 }

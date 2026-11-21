@@ -52,6 +52,8 @@ h1{font-family:var(--display);font-size:44px;line-height:1;margin:0;letter-spaci
 .hp{position:absolute;left:-9999px;width:1px;height:1px;opacity:0}
 .done{text-align:center;display:grid;gap:10px;padding:10px 0}.done b{font-family:var(--display);font-size:28px}
 #gl-body{display:grid;gap:14px}.panel [hidden]{display:none!important}
+.optins{display:grid;gap:8px}.panel label.check{display:flex;align-items:center;gap:10px;color:var(--ink);font-size:15px}
+.check input{width:22px;height:22px;accent-color:var(--gold)}.small.left{text-align:left}
 .close{justify-self:end;background:none;border:0;color:var(--muted);font-size:15px;cursor:pointer;padding:4px}
 
 </style>
@@ -79,12 +81,17 @@ h1{font-family:var(--display);font-size:44px;line-height:1;margin:0;letter-spaci
       <p class="for" id="gl-for"></p>
       <label>Your name<input name="name" autocomplete="name" required maxlength="80" placeholder="First and last"></label>
       <label>How many in your group (including you)<div class="seg" data-k="party"><button type="button">1</button><button type="button">2</button><button type="button">3</button><button type="button">4</button><button type="button">5+</button></div></label>
-      <label>Reminder on show day<div class="seg three" data-k="reminder"><button type="button">Text me</button><button type="button">Email me</button><button type="button">No thanks</button></div></label>
-      <label id="gl-contact-wrap" hidden><span id="gl-contact-label">Phone number</span><input name="contact" maxlength="120" id="gl-contact"></label>
+      <label>Phone number<input name="phone" type="tel" autocomplete="tel" maxlength="30" placeholder="(813) 555-0123"></label>
+      <label>Email<input name="email" type="email" autocomplete="email" maxlength="120" placeholder="you@email.com"></label>
+      <div class="optins">
+        <label class="check"><input type="checkbox" name="optin_text"> Text me about JohnVon shows</label>
+        <label class="check"><input type="checkbox" name="optin_email"> Email me about JohnVon shows</label>
+        <p class="small left">By checking a box you agree to get messages about JohnVon shows. Msg and data rates may apply. Reply STOP to opt out anytime.</p>
+      </div>
       <input class="hp" name="website" tabindex="-1" autocomplete="off" aria-hidden="true">
       <p class="err" id="gl-err" hidden></p>
       <button class="btn gold" type="submit" id="gl-send">Put me on the list</button>
-      <p class="small">Your name only goes to the door. Never shared or posted.</p>
+      <p class="small">Your name only goes to the door. Your number and email are never shared or sold.</p>
     </div>
   </form>
 </div>
@@ -125,13 +132,10 @@ h1{font-family:var(--display);font-size:44px;line-height:1;margin:0;letter-spaci
   }).join('');
   // Guest list: our own form, Google Forms stores it (no Google screens for the guest). Names never shown publicly.
   const gl = document.getElementById('gl'), form = document.getElementById('gl-form'), err = document.getElementById('gl-err');
-  const pick = {party: '', reminder: ''}; let cur = null;
+  const pick = {party: ''}; let cur = null;
   form.querySelectorAll('.seg').forEach(seg => seg.querySelectorAll('button').forEach(b => {
     b.setAttribute('aria-pressed', 'false');
-    b.onclick = () => { seg.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', String(x === b))); pick[seg.dataset.k] = b.textContent;
-      if (seg.dataset.k === 'reminder') { const w = document.getElementById('gl-contact-wrap'), inp = document.getElementById('gl-contact');
-        w.hidden = b.textContent === 'No thanks'; document.getElementById('gl-contact-label').textContent = b.textContent === 'Email me' ? 'Email' : 'Phone number';
-        inp.type = b.textContent === 'Email me' ? 'email' : 'tel'; inp.autocomplete = b.textContent === 'Email me' ? 'email' : 'tel'; } };
+    b.onclick = () => { seg.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', String(x === b))); pick[seg.dataset.k] = b.textContent; };
   }));
   const open = s => { cur = s; document.getElementById('gl-for').textContent = `${s.name} · ${s.venue} · ${new Date(s.date + 'T12:00:00').toLocaleDateString('en-US', {weekday: 'short', month: 'short', day: 'numeric'})} · ${s.time}`;
     err.hidden = true; gl.hidden = false; form.name.focus(); };
@@ -140,14 +144,18 @@ h1{font-family:var(--display);font-size:44px;line-height:1;margin:0;letter-spaci
   box.querySelectorAll('[data-gl]').forEach(b => b.onclick = () => open(shows.find(s => s.id === b.dataset.gl)));
   form.onsubmit = async e => {
     e.preventDefault(); err.hidden = true;
-    const name = form.name.value.trim(), contact = (document.getElementById('gl-contact').value || '').trim();
-    const bad = !name ? 'Add your name.' : !pick.party ? 'How many in your group?' : !pick.reminder ? 'Pick a reminder option.' :
-      (pick.reminder !== 'No thanks' && !contact) ? 'Add where to send the reminder.' : '';
+    const name = form.name.value.trim(), phone = form.phone.value.trim(), email = form.email.value.trim();
+    const wantText = form.optin_text.checked, wantEmail = form.optin_email.checked;
+    const bad = !name ? 'Add your name.' : !pick.party ? 'How many in your group?' :
+      (wantText && phone.replace(/\D/g, '').length < 10) ? 'Add your phone number to get texts.' :
+      (wantEmail && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) ? 'Add your email to get emails.' :
+      (email && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) ? 'Check your email address.' : '';
     if (bad) { err.textContent = bad; err.hidden = false; return; }
     if (form.website.value) return;   // bot
     const f = d.guestlist.fields, body = new URLSearchParams();
-    body.append(f.show, `${cur.name} at ${cur.venue} (${cur.date}) [${cur.id}]`); body.append(f.name, name);
-    body.append(f.party, pick.party); body.append(f.reminder, pick.reminder); body.append(f.contact, pick.reminder === 'No thanks' ? '' : contact);
+    body.append(f.show, `${cur.name} at ${cur.venue} (${cur.date}) [${cur.id}]`); body.append(f.name, name); body.append(f.party, pick.party);
+    if (phone) body.append(f.phone, phone); if (email) body.append(f.email, email);
+    if (wantText) body.append(f.optin, d.guestlist.optin_text); if (wantEmail) body.append(f.optin, d.guestlist.optin_email);
     const btn = document.getElementById('gl-send'); btn.disabled = true; btn.textContent = 'Adding you...';
     try {
       await fetch(d.guestlist.action, {method: 'POST', mode: 'no-cors', body});
