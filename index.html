@@ -142,7 +142,7 @@ h1{font-family:var(--display);font-weight:900;font-stretch:112%;text-transform:u
         <p class="meta">${esc(s.venue)}</p></div></div>
       ${s.note ? `<p class="note">${esc(s.note)}</p>` : ''}
       ${d.guestlist ? `<button type="button" class="btn gold" data-gl="${esc(s.id)}">Get on the guest list</button>` : (rsvp(s) ? `<a class="btn gold" href="${esc(rsvp(s))}">I'm coming</a>` : '')}
-      <div class="row"><a class="btn" href="${esc(gcal(s))}">Google Calendar</a><a class="btn" href="${esc(ics(s))}" download="johnvon-${esc(s.id)}.ics">Apple Calendar</a></div>
+      <div class="row"><a class="btn" href="${esc(gcal(s))}">Google Calendar</a><a class="btn" href="ics/${encodeURIComponent(s.id)}.ics">Apple Calendar</a></div>
       ${s.map ? `<a class="btn" href="${esc(s.map)}">Directions</a>` : ''}
     </article>`;
   }).join('');
