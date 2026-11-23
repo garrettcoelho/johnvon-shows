@@ -183,7 +183,7 @@ html,body{overscroll-behavior-y:contain}
   <footer>Gold dots on the calendar are dates I'm already booked.</footer>
 </main>
 <script>
-const VERSION = '2026-11-23h';   // bump on every publish; an old cached copy sees the new number and reloads itself
+const VERSION = '2026-11-23i';   // bump on every publish; an old cached copy sees the new number and reloads itself
 const fresh = () => {   // show the signing screen, then load a fresh copy (never the cached one)
   try { sessionStorage.setItem('jv_reload', '1'); } catch (e) {}
   const R = document.getElementById('reload'); R.classList.remove('out'); R.hidden = false;
@@ -194,7 +194,7 @@ function reloadDone() {   // fade the signing screen out once the schedule is on
   try { sessionStorage.removeItem('jv_reload'); } catch (e) {}
   setTimeout(() => { R.classList.add('out'); setTimeout(() => { R.hidden = true; R.classList.remove('out'); }, 450); }, 500);
 }
-setTimeout(reloadDone, 4000);   // never leave it up if something is slow
+setTimeout(reloadDone, 9000);   // never leave it up if Google is slow to answer
 (function () {   // pull down at the top to reload a fresh copy (never the cached one)
   const P = document.getElementById('ptr'), I = P.querySelector('img'), MAX = 120, TRIGGER = 80; let y0 = null, pulled = 0;
   document.addEventListener('touchstart', e => { y0 = scrollY <= 0 ? e.touches[0].clientY : null; pulled = 0; }, {passive: true});
