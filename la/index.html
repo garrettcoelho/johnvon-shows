@@ -12,7 +12,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&family=Graduate&family=Bodoni+Moda:ital,opsz,wght@1,6..96,400..700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&family=Bodoni+Moda:ital,opsz,wght@1,6..96,400..700&display=swap" rel="stylesheet">
 <style>
 :root{--rc-cream:#F4ECD8;--rc-navy:#1F2B47;--rc-green:#2E6B3F;--rc-orange:#E2762F;--bg:#090506;--velvet:#5B0B1B;--neon:#FF3347;--gold:#CDA85A;--bone:#EFE6DA;--smoke:#A8978D;--line:#2E181C;--field:#140A0D}
 *{box-sizing:border-box;margin:0}
@@ -24,15 +24,16 @@ body{background:radial-gradient(120% 60% at 50% -10%,#2a0710 0%,var(--bg) 60%);c
   min-height:100vh;padding:28px 16px 64px;-webkit-font-smoothing:antialiased}
 main{max-width:460px;margin:0 auto}
 /* collab poster header: their name in varsity type, John's signature written across it */
-.hero{position:relative;padding:4px 0 8px;margin-bottom:4px}
-.hero .tag{display:inline-block;font:800 12px "Archivo",sans-serif;letter-spacing:.12em;color:var(--rc-orange);border:1.5px solid var(--rc-orange);border-radius:999px;padding:5px 11px;margin-bottom:12px;transform:rotate(-2deg)}
-h1{font-family:"Graduate",serif;font-weight:400;color:var(--rc-cream);line-height:.9;font-size:clamp(50px,14vw,80px);letter-spacing:-.01em}
-h1 .mf{display:block;font-family:"Archivo",sans-serif;font-weight:900;font-stretch:80%;font-size:clamp(19px,6vw,26px);line-height:1.05;color:var(--rc-green);
-  background:var(--rc-cream);padding:5px 10px 4px;margin-top:10px;width:max-content;max-width:100%;transform:rotate(-1.5deg);box-shadow:4px 4px 0 var(--rc-orange)}
-.hero .times{position:absolute;right:45%;top:clamp(60px,17vw,92px);font:300 34px/1 "Archivo",sans-serif;color:var(--gold)}
-.hero .sig{position:absolute;right:-4px;top:4px;width:46%;max-width:270px;height:auto;filter:drop-shadow(0 4px 14px rgba(0,0,0,.75));pointer-events:none}
-.for{font-family:"Bodoni Moda",serif;font-style:italic;font-size:22px;color:var(--gold);margin:12px 0 4px}
-.lede{color:var(--smoke);font-size:15px;line-height:1.5;max-width:36ch}
+.hero{position:relative;text-align:center;padding:0 0 6px}
+.hero .badge{display:block;width:min(74vw,300px);height:auto;margin:0 auto -14px;position:relative;z-index:1;filter:drop-shadow(0 10px 24px rgba(0,0,0,.7))}
+h1{position:relative;z-index:2;font-family:"Archivo",sans-serif;font-weight:900;font-stretch:88%;color:#fff;text-transform:uppercase;
+  font-size:clamp(50px,15.5vw,80px);line-height:.86;letter-spacing:-.02em;white-space:nowrap;text-shadow:0 4px 0 rgba(0,0,0,.55)}
+h1 .mf{display:block;font-weight:800;font-stretch:80%;font-size:.36em;letter-spacing:.005em;line-height:1.05;margin-top:4px}
+.hero .with{display:flex;align-items:center;justify-content:center;gap:10px;margin-top:6px}
+.hero .times{font:300 34px/1 "Archivo",sans-serif;color:var(--gold)}
+.hero .sig{width:min(34vw,140px);height:auto;filter:drop-shadow(0 4px 14px rgba(0,0,0,.75))}
+.for{font-family:"Bodoni Moda",serif;font-style:italic;font-size:22px;color:var(--gold);margin:14px 0 4px;text-align:center}
+.lede{color:var(--smoke);font-size:15px;line-height:1.5;max-width:36ch;margin:0 auto;text-align:center}
 
 /* the bib: the one loud thing */
 .bib{position:relative;margin:28px 0 30px;background:var(--bone);color:var(--velvet);border-radius:6px;padding:22px 22px 18px;
@@ -119,27 +120,28 @@ footer{margin-top:48px;color:var(--smoke);font-size:13px;text-align:center}
 /* pull down to refresh */
 html,body{overscroll-behavior-y:contain}
 #ptr{position:fixed;z-index:60;left:50%;top:calc(6px + env(safe-area-inset-top,0px));transform:translate(-50%,-90px);opacity:0;pointer-events:none}
-#ptr img{display:block;height:74px;width:auto;clip-path:inset(0 100% 0 0);filter:drop-shadow(0 4px 10px rgba(0,0,0,.8))}
+#ptr img{display:block;width:58px;height:58px;border-radius:50%;filter:drop-shadow(0 4px 10px rgba(0,0,0,.8))}
+#ptr.spin img{animation:ptr-spin .7s linear infinite}
+@keyframes ptr-spin{to{transform:rotate(360deg)}}
 /* reload screen: the signature writes itself, left to right, while the fresh page loads */
-#reload{position:fixed;inset:0;z-index:100;display:grid;place-items:center;background:radial-gradient(120% 60% at 50% 40%,#2a0710 0%,var(--bg) 62%);transition:opacity .4s ease}
-#reload img{width:min(56vw,230px);height:auto;animation:sign 1.6s cubic-bezier(.55,0,.25,1) infinite}
+#reload{position:fixed;inset:0;z-index:100;display:grid;place-items:center;background:#000;transition:opacity .4s ease}
+#reload .run{width:min(86vw,380px);aspect-ratio:1;background:#000 url(runclub-run.jpg) center/contain no-repeat}
+#reload video{width:100%;height:100%;object-fit:cover;display:block}
 #reload.out{opacity:0;pointer-events:none}
-@keyframes sign{0%{clip-path:inset(0 100% 0 0);opacity:1}55%{clip-path:inset(0 0 0 0);opacity:1}85%{clip-path:inset(0 0 0 0);opacity:1}100%{clip-path:inset(0 0 0 0);opacity:0}}
-@media (prefers-reduced-motion:reduce){#reload img{animation:none}}
-@media (max-width:480px){h1 .mf{margin-top:38px}.row{grid-template-columns:1fr;gap:0}}
+
+@media (max-width:480px){.row{grid-template-columns:1fr;gap:0}}
 @media (prefers-reduced-motion:reduce){.bib.locked .stamp{animation:none;opacity:1;transform:rotate(-14deg)}}
 </style>
 </head>
 <body>
-<div id="ptr" aria-hidden="true"><img src="johnvon-logo-red.png" alt=""></div>
-<div id="reload" role="status" aria-label="Refreshing" hidden><img src="johnvon-logo-red.png" alt=""></div>
-<script>try { if (sessionStorage.getItem('jv_reload')) document.getElementById('reload').hidden = false; } catch (e) {}</script>
+<div id="ptr" aria-hidden="true"><img src="runclub-badge-180.webp" alt=""></div>
+<div id="reload" role="status" aria-label="Refreshing" hidden><div class="run"><video id="runVid" src="runclub-run.mp4" poster="runclub-run.jpg" muted loop playsinline preload="auto" aria-hidden="true"></video></div></div>
+<script>try { if (sessionStorage.getItem('jv_reload')) { document.getElementById('reload').hidden = false; if (!matchMedia('(prefers-reduced-motion: reduce)').matches) document.getElementById('runVid').play().catch(() => {}); } } catch (e) {}</script>
 <main>
   <header class="hero">
-    <span class="tag">COLLAB</span>
-    <h1>Run<br>Club<span class="mf">For MFs That Don't Run</span></h1>
-    <span class="times" aria-hidden="true">&times;</span>
-    <img class="sig" src="johnvon-logo-red.png" alt="JohnVon">
+    <img class="badge" src="runclub-badge.webp" alt="">
+    <h1>Run Club<span class="mf">For MFs That Don't Run</span></h1>
+    <div class="with"><span class="times" aria-hidden="true">&times;</span><img class="sig" src="johnvon-logo-red.png" alt="JohnVon"></div>
   </header>
   <p class="for">for LA</p>
   <p class="lede">Put me on the schedule. It goes straight onto my calendar, and you'll see it here when I confirm.</p>
@@ -183,10 +185,11 @@ html,body{overscroll-behavior-y:contain}
   <footer>Gold dots on the calendar are dates I'm already booked.</footer>
 </main>
 <script>
-const VERSION = '2026-11-23j';   // bump on every publish; an old cached copy sees the new number and reloads itself
+const VERSION = '2026-11-23l';   // bump on every publish; an old cached copy sees the new number and reloads itself
 const fresh = () => {   // show the signing screen, then load a fresh copy (never the cached one)
   try { sessionStorage.setItem('jv_reload', '1'); } catch (e) {}
   const R = document.getElementById('reload'); R.classList.remove('out'); R.hidden = false;
+  if (!matchMedia('(prefers-reduced-motion: reduce)').matches) document.getElementById('runVid').play().catch(() => {});
   setTimeout(() => location.replace(location.pathname + '?v=' + Date.now() + location.hash), 900);
 };
 function reloadDone() {   // fade the signing screen out once the schedule is on screen
@@ -203,12 +206,12 @@ setTimeout(reloadDone, 9000);   // never leave it up if Google is slow to answer
     pulled = Math.min(MAX, Math.max(0, (e.touches[0].clientY - y0) * 0.6));
     P.style.opacity = pulled > 8 ? Math.min(1, pulled / TRIGGER) : 0;
     P.style.transform = `translate(-50%, ${pulled - 70}px)`;
-    I.style.clipPath = `inset(0 ${Math.max(0, 100 - pulled / TRIGGER * 100)}% 0 0)`;   // the pull writes the signature
+    I.style.transform = `rotate(${pulled * 4}deg)`;   // the badge spins as you pull
   }, {passive: true});
   document.addEventListener('touchend', () => {
     if (y0 === null) return; y0 = null;
-    if (pulled >= TRIGGER) { P.style.opacity = 0; fresh(); }
-    else { P.style.opacity = 0; P.style.transform = 'translate(-50%,-90px)'; I.style.clipPath = 'inset(0 100% 0 0)'; }
+    if (pulled >= TRIGGER) { P.classList.add('spin'); P.style.transform = 'translate(-50%, 14px)'; fresh(); }
+    else { P.style.opacity = 0; P.style.transform = 'translate(-50%,-90px)'; I.style.transform = ''; }
   });
 })();
 fetch(location.pathname + '?check=' + Date.now(), {cache: 'no-store'}).then(r => r.text())   // auto-update an old cached copy
