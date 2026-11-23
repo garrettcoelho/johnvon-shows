@@ -102,6 +102,9 @@ footer{margin-top:48px;color:var(--smoke);font-size:13px;text-align:center}
 .cal-sum{font-size:13px;color:var(--smoke);margin-left:auto}
 .tip{display:flex;gap:12px;align-items:center;background:#1d1013;border:1px dashed var(--gold);border-radius:12px;padding:12px 14px;margin:18px 0 0;font-size:14px;line-height:1.4}
 .tip button{appearance:none;flex:none;background:var(--gold);color:#14050A;border:0;border-radius:8px;padding:8px 12px;font:800 13px "Archivo",sans-serif;cursor:pointer}
+.editing{display:flex;gap:12px;align-items:center;justify-content:space-between;background:#1d1013;border:1px solid var(--gold);border-radius:12px;padding:10px 14px;margin-bottom:14px;font-size:14px;font-weight:600}
+.editing button{appearance:none;background:none;border:1px solid var(--line);color:var(--bone);border-radius:8px;padding:8px 10px;font:600 13px "Archivo",sans-serif;cursor:pointer}
+.acts{display:flex;gap:6px}
 @media (max-width:480px){h1 .mf{margin-top:38px}}
 @media (prefers-reduced-motion:reduce){.bib.locked .stamp{animation:none;opacity:1;transform:rotate(-14deg)}}
 </style>
@@ -128,11 +131,12 @@ footer{margin-top:48px;color:var(--smoke);font-size:13px;text-align:center}
   </div>
 
   <form id="f" novalidate>
+    <div class="editing" id="editing" hidden><span id="editTxt"></span><button type="button" id="editStop">Never mind</button></div>
     <div class="quick" role="group" aria-label="Quick picks">
       <button type="button" class="chip" data-dow="3" data-city="Tampa" data-time="19:00">Next Wednesday in Tampa</button>
       <button type="button" class="chip" data-dow="6" data-city="St. Pete" data-time="09:30">Next Saturday in St. Pete</button>
     </div>
-    <div class="f"><label id="calLbl">Dates <span class="hint">(tap as many as you want)</span></label>
+    <div class="f"><label id="calLbl">Dates <span class="hint" id="calHint">(tap as many as you want)</span></label>
       <div class="cal" id="cal" role="group" aria-labelledby="calLbl"></div></div>
     <div class="row">
       <div class="f"><label for="start">Start</label><input type="time" id="start" value="19:00" required></div>
@@ -161,7 +165,7 @@ const KEY = (() => { const m = location.hash.match(/k=([\w-]+)/); let k = m ? m[
   try { if (k) localStorage.setItem('jv_k', k); else k = localStorage.getItem('jv_k') || ''; } catch (e) {} return k; })();
 if (KEY && !/k=/.test(location.hash)) history.replaceState(null, '', location.pathname + '#k=' + KEY);   // so Add to Home Screen keeps the key
 const $ = id => document.getElementById(id);
-const picked = new Set(); let booked = new Set();
+const picked = new Set(); let booked = new Set(); let editing = null;
 const today = new Date(); today.setHours(0,0,0,0);
 let view = new Date(today.getFullYear(), today.getMonth(), 1);
 const MONTH = ['January','February','March','April','May','June','July','August','September','October','November','December'];
@@ -204,12 +208,12 @@ function drawCal() {
     b.disabled = dt < today; b.setAttribute('aria-pressed', picked.has(k));
     b.setAttribute('aria-label', `${DOW[dt.getDay()]} ${MONTH[m]} ${d}${booked.has(k) ? ', already booked' : ''}`);
     if (picked.has(k)) b.classList.add('on'); if (booked.has(k)) b.classList.add('booked');
-    b.onclick = () => { picked.has(k) ? picked.delete(k) : picked.add(k); drawCal(); paint(); };
+    b.onclick = () => { if (editing) { picked.clear(); picked.add(k); } else picked.has(k) ? picked.delete(k) : picked.add(k); drawCal(); paint(); };
     g.appendChild(b);
   }
   C.appendChild(g);
   const f = document.createElement('div'); f.className = 'cal-foot';
-  [[3, 'Every Wednesday'], [6, 'Every Saturday']].forEach(([dow, label]) => {
+  if (!editing) [[3, 'Every Wednesday'], [6, 'Every Saturday']].forEach(([dow, label]) => {
     const c = document.createElement('button'); c.type = 'button'; c.className = 'chip'; c.textContent = label;
     c.onclick = () => { for (let d = 1; d <= days; d++) { const dt = new Date(y, m, d); if (dt >= today && dt.getDay() === dow) picked.add(ymd(dt)); }
       $('start').value = dow === 3 ? '19:00' : '09:30'; drawCal(); paint(); };
@@ -225,7 +229,7 @@ function drawCal() {
 document.querySelectorAll('.quick .chip').forEach(b => b.addEventListener('click', () => {
   const d = new Date(); d.setHours(0,0,0,0);
   let add = (+b.dataset.dow - d.getDay() + 7) % 7; if (add === 0) add = 7; d.setDate(d.getDate() + add);
-  picked.add(ymd(d)); view = new Date(d.getFullYear(), d.getMonth(), 1); drawCal();
+  if (editing) picked.clear(); picked.add(ymd(d)); view = new Date(d.getFullYear(), d.getMonth(), 1); drawCal();
   if (b.dataset.time) $('start').value = b.dataset.time;
   if (!$('where').value.trim() || /^(Tampa|St\. Pete)$/.test($('where').value.trim())) $('where').value = b.dataset.city;
   document.querySelectorAll('.quick .chip').forEach(x => x.setAttribute('aria-pressed', x === b));
@@ -250,8 +254,10 @@ function render(r) {
     const w = document.createElement('div'); w.className = 'w'; w.textContent = e.where;
     const s = document.createElement('span'); s.textContent = e.cancelled ? 'Cancelled' : `${DOW[d.getDay()]}, ${t12(e.start)} to ${t12(e.end)}`; w.appendChild(s);
     li.append(dd, w);
-    if (!e.cancelled) { const x = document.createElement('button'); x.className = 'x'; x.textContent = 'Cancel';
-      x.onclick = () => cancel(e, x); li.appendChild(x); } else li.appendChild(document.createElement('span'));
+    if (!e.cancelled) { const acts = document.createElement('div'); acts.className = 'acts';
+      const c = document.createElement('button'); c.className = 'x'; c.textContent = 'Change'; c.onclick = () => startEdit(e);
+      const x = document.createElement('button'); x.className = 'x'; x.textContent = 'Cancel'; x.onclick = () => cancel(e, x);
+      acts.append(c, x); li.appendChild(acts); } else li.appendChild(document.createElement('span'));
     L.appendChild(li);
   });
 }
@@ -264,7 +270,8 @@ async function call(body) {
 }
 
 let demoData = {upcoming: [{id:'1', date: ymd(new Date(Date.now()+86400000)), start:'19:00', end:'21:00', where:'Topgolf St. Pete'}], venues: ['Topgolf St. Pete']};
-function demo(b) { if (b && !b.action) (b.dates || [b.date]).forEach(dd => demoData.upcoming.push({id: String(Math.random()), date: dd, start: b.start, end: b.end || String((+b.start.slice(0,2)+2)%24).padStart(2,'0')+b.start.slice(2), where: b.where}));
+function demo(b) { if (b && b.action === 'edit') { const x = demoData.upcoming.find(u => u.id === b.id); Object.assign(x, {date: b.date, start: b.start, end: b.end || x.end, where: b.where}); }
+  if (b && !b.action) (b.dates || [b.date]).forEach(dd => demoData.upcoming.push({id: String(Math.random()), date: dd, start: b.start, end: b.end || String((+b.start.slice(0,2)+2)%24).padStart(2,'0')+b.start.slice(2), where: b.where}));
   return Promise.resolve(Object.assign({ok: true}, demoData)); }
 
 async function cancel(e, btn) {
@@ -274,6 +281,17 @@ async function cancel(e, btn) {
   catch (x) { btn.disabled = false; msg(x.message || 'Could not cancel. Text John.', 'err'); }
 }
 
+function startEdit(e) {
+  editing = e; picked.clear(); picked.add(e.date);
+  const d = parse(e.date); view = new Date(d.getFullYear(), d.getMonth(), 1);
+  $('start').value = e.start; $('end').value = e.end; $('where').value = e.where; $('note').value = '';
+  $('editTxt').textContent = `Changing ${DOW[d.getDay()]}, ${MON[d.getMonth()]} ${d.getDate()} at ${e.where}`;
+  $('editing').hidden = false; $('calHint').textContent = '(pick the new date)'; $('go').textContent = 'Save changes'; msg('');
+  drawCal(); paint(); $('f').scrollIntoView({behavior: 'smooth', block: 'start'});
+}
+function stopEdit() { editing = null; $('editing').hidden = true; $('calHint').textContent = '(tap as many as you want)'; $('go').textContent = 'Lock it in'; picked.clear(); drawCal(); paint(); }
+$('editStop').onclick = stopEdit;
+
 function msg(t, k) { $('msg').textContent = t; $('msg').className = 'msg ' + (k || ''); }
 
 $('f').addEventListener('submit', async ev => {
@@ -282,6 +300,15 @@ $('f').addEventListener('submit', async ev => {
   if (!b.dates.length) return msg('Tap at least one date on the calendar.', 'err'), $('cal').scrollIntoView({block: 'center'});
   if (!b.start) return msg('Add a start time.', 'err'), $('start').focus();
   if (!b.where) return msg('Add where it is.', 'err'), $('where').focus();
+  if (editing) {
+    $('go').disabled = true; $('go').textContent = 'Saving...'; msg('');
+    try {
+      const r = await call({action: 'edit', id: editing.id, date: b.dates[0], start: b.start, end: b.end, where: b.where, note: b.note});
+      if (!r.ok) { if (r.error === 'bad link') return locked(); throw new Error(r.error); }
+      render(r); stopEdit(); $('bib').classList.add('locked'); msg("Saved. My calendar has the new details.", 'ok');
+    } catch (x) { msg(x.message || "That didn't go through. Try again or text John.", 'err'); $('go').textContent = 'Save changes'; }
+    $('go').disabled = false; return;
+  }
   $('go').disabled = true; $('go').textContent = 'Locking in...'; msg('');
   try {
     const r = await call(b); if (!r.ok) { if (r.error === 'bad link') return locked(); throw new Error(r.error); }
