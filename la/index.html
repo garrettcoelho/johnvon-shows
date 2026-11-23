@@ -125,8 +125,16 @@ html,body{overscroll-behavior-y:contain}
 @keyframes ptr-spin{to{transform:rotate(360deg)}}
 /* reload screen: the signature writes itself, left to right, while the fresh page loads */
 #reload{position:fixed;inset:0;z-index:100;display:grid;place-items:center;background:#000;transition:opacity .4s ease}
-#reload .run{width:min(86vw,380px);aspect-ratio:1;background:#000 url(runclub-run.jpg) center/contain no-repeat}
-#reload video{width:100%;height:100%;object-fit:cover;display:block}
+/* loading screen: John's little guy running in place (pure CSS loop, no video) */
+#reload .run{position:relative;width:min(70vw,300px);aspect-ratio:640/606}
+#reload .run img{position:absolute;inset:0;width:100%;height:100%}
+#reload .lines{position:absolute;left:-30%;right:-30%;top:30%;height:40%;pointer-events:none}
+#reload .lines i{position:absolute;right:0;height:3px;border-radius:3px;background:rgba(255,255,255,.55);animation:jv-line .5s linear infinite}
+#reload .lines i:nth-child(1){top:10%;width:22%;animation-delay:0s}
+#reload .lines i:nth-child(2){top:45%;width:30%;animation-delay:-.17s}
+#reload .lines i:nth-child(3){top:80%;width:18%;animation-delay:-.33s}
+@keyframes jv-line{from{transform:translateX(0);opacity:0}15%{opacity:1}to{transform:translateX(-260%);opacity:0}}
+@media (prefers-reduced-motion:reduce){#reload .lines i{animation:none}#reload .lines{display:none}}
 #reload.out{opacity:0;pointer-events:none}
 
 @media (max-width:480px){.row{grid-template-columns:1fr;gap:0}}
@@ -135,8 +143,8 @@ html,body{overscroll-behavior-y:contain}
 </head>
 <body>
 <div id="ptr" aria-hidden="true"><img src="runclub-badge-180.webp" alt=""></div>
-<div id="reload" role="status" aria-label="Refreshing" hidden><div class="run"><video id="runVid" src="runclub-run.mp4" poster="runclub-run.jpg" muted loop playsinline preload="auto" aria-hidden="true"></video></div></div>
-<script>try { if (sessionStorage.getItem('jv_reload')) { document.getElementById('reload').hidden = false; if (!matchMedia('(prefers-reduced-motion: reduce)').matches) document.getElementById('runVid').play().catch(() => {}); } } catch (e) {}</script>
+<div id="reload" role="status" aria-label="Refreshing" hidden><div class="run"><div class="lines" aria-hidden="true"><i></i><i></i><i></i></div><img src="runclub-runner.jpg" alt=""></div></div>
+<script>try { if (sessionStorage.getItem('jv_reload')) { document.getElementById('reload').hidden = false; } } catch (e) {}</script>
 <main>
   <header class="hero">
     <img class="badge" src="runclub-badge.webp" alt="">
@@ -185,11 +193,10 @@ html,body{overscroll-behavior-y:contain}
   <footer>Gold dots on the calendar are dates I'm already booked.</footer>
 </main>
 <script>
-const VERSION = '2026-11-23l';   // bump on every publish; an old cached copy sees the new number and reloads itself
+const VERSION = '2026-11-23n';   // bump on every publish; an old cached copy sees the new number and reloads itself
 const fresh = () => {   // show the signing screen, then load a fresh copy (never the cached one)
   try { sessionStorage.setItem('jv_reload', '1'); } catch (e) {}
   const R = document.getElementById('reload'); R.classList.remove('out'); R.hidden = false;
-  if (!matchMedia('(prefers-reduced-motion: reduce)').matches) document.getElementById('runVid').play().catch(() => {});
   setTimeout(() => location.replace(location.pathname + '?v=' + Date.now() + location.hash), 900);
 };
 function reloadDone() {   // fade the signing screen out once the schedule is on screen
