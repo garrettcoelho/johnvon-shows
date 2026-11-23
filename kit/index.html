@@ -75,6 +75,7 @@ input:focus,textarea:focus,button:focus-visible,a:focus-visible{outline:2px soli
 .sugg .by{font-size:11px;color:var(--smoke);text-align:right;cursor:default}
 footer{margin-top:48px;color:var(--smoke);font-size:13px;text-align:center}
 @media (max-width:480px){.row{grid-template-columns:1fr;gap:0}}
+.allv{display:inline-block;margin-top:12px;color:var(--gold);font:700 14px "Archivo",sans-serif;text-decoration:none}
 </style>
 </head>
 <body>
@@ -89,7 +90,7 @@ footer{margin-top:48px;color:var(--smoke);font-size:13px;text-align:center}
   <p class="lead" id="sound"></p>
   <p class="sub" id="bio"></p>
 
-  <h2>Played at</h2>
+  <h2 id="playedH">Played at</h2>
   <div class="venues" id="venues"></div>
 
   <div class="photos" id="photos" style="margin-top:22px"></div>
@@ -127,7 +128,7 @@ footer{margin-top:48px;color:var(--smoke);font-size:13px;text-align:center}
   <footer>JohnVon Productions. A Firm Foundation.</footer>
 </main>
 <script>
-const KIT = {"name": "JohnVon", "tagline": "Tampa Bay house DJ", "sound": "Minimal, tech and deep house. Groovy day-party energy that carries into the late night.", "bio": "JohnVon is a Tampa Bay DJ who reads the room and keeps it moving. From run clubs and pool parties to packed St. Pete nights, he plays house music people actually dance to.", "venues": ["The Estate", "Tryst", "Red Thread", "Copper Shaker", "Hollander Hotel", "SkyBeach Resort", "Hotel Alba", "Soundlab", "Boohoff Foundation event", "Run Club For MFs That Don't Run"], "collectives": ["Phat Basslines", "Rotating Frequencies", "House Hats Collective"], "photos": ["photo-1.jpg", "photo-2.jpg", "photo-3.jpg", "photo-4.jpg"], "mixes": ["https://soundcloud.com/user-503165579/vons-mini-mix-4", "https://soundcloud.com/user-503165579/vons-mini-mix-2-1"], "email": "john@itsjohnvon.com", "instagram": "john.vondutch", "tiktok": "johnvonhq", "rates": {"normal_hour": 200, "normal_min": 400, "ref_hour": 100, "ref_min": 200, "ref_period": "first month"}, "referrers": {"la": {"name": "Run Club", "org": "Run Club For MFs That Don't Run", "team": ["LA", "Jeff", "Rusty"]}}};
+const KIT = {"name": "JohnVon", "tagline": "Tampa Bay house DJ", "sound": "Minimal, tech and deep house. Groovy day-party energy that carries into the late night.", "bio": "JohnVon is a Tampa Bay DJ who reads the room and keeps it moving. From run clubs and pool parties to packed St. Pete nights, he plays house music people actually dance to.", "venues": ["The Estate", "Tryst", "Copper Shaker", "Red Thread", "Hollander Hotel", "SkyBeach Resort", "Topgolf St. Pete", "Tangra Nightclub", "Sal Y Mar", "Maru Rooftop", "Hotel Alba", "Soundlab Tampa", "Benchmark International Arena", "The Patio Tampa", "1920 Ybor", "Oxford Exchange", "DICK'S House of Sport", "SouthBar Tampa", "Yard House", "Boohoff Foundation event"], "collectives": ["Phat Basslines", "Rotating Frequencies", "House Hats Collective"], "photos": ["photo-1.jpg", "photo-2.jpg", "photo-3.jpg", "photo-4.jpg"], "mixes": ["https://soundcloud.com/user-503165579/vons-mini-mix-4", "https://soundcloud.com/user-503165579/vons-mini-mix-2-1"], "email": "john@itsjohnvon.com", "instagram": "john.vondutch", "tiktok": "johnvonhq", "rates": {"normal_hour": 200, "normal_min": 400, "ref_hour": 100, "ref_min": 200, "ref_period": "first month"}, "referrers": {"la": {"name": "Run Club", "org": "Run Club For MFs That Don't Run", "team": ["LA", "Jeff", "Rusty"]}}, "venues_total": 19};
 const API = 'https://script.google.com/macros/s/AKfycbxv0d2CoaQJnfbWkXmuHNWUOcRiWbtCDvTizeGInfd4o2BS832bNYwIaJrljqCiLFlZKQ/exec';
 const MAPS_KEY = 'AIzaSyAJctUkAJCvC9fkdmvcJZA-vRRsoCzuCVc';
 // Preview copy (not shows.itsjohnvon.com): show a PREVIEW tag and never save or track anything.
@@ -163,6 +164,7 @@ if (ref) {
 }
 $('sound').textContent = KIT.sound; $('bio').textContent = KIT.bio;
 KIT.venues.forEach(v => { const s = document.createElement('span'); s.textContent = v; $('venues').appendChild(s); });
+if (KIT.venues_total) { $('playedH').textContent = `Played at ${KIT.venues_total} venues`; const a = document.createElement('a'); a.href = 'https://itsjohnvon.com/venues/'; a.target = '_blank'; a.rel = 'noopener'; a.textContent = 'See every venue'; a.className = 'allv'; $('venues').after(a); }
 KIT.collectives.forEach(v => { const s = document.createElement('span'); s.className = 'c'; s.textContent = v; $('venues').appendChild(s); });
 KIT.photos.slice(1).concat(KIT.photos.slice(0, 1)).slice(0, 4).forEach(p => { const i = document.createElement('img'); i.src = p; i.alt = 'JohnVon DJing'; i.loading = 'lazy'; $('photos').appendChild(i); });
 if (KIT.mixes.length) { $('mixWrap').hidden = false; KIT.mixes.forEach(u => { const d = document.createElement('div'); d.className = 'mix';
