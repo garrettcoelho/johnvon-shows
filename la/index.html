@@ -118,18 +118,22 @@ footer{margin-top:48px;color:var(--smoke);font-size:13px;text-align:center}
 .acts{display:flex;gap:6px}
 /* pull down to refresh */
 html,body{overscroll-behavior-y:contain}
-#ptr{position:fixed;z-index:60;left:50%;top:calc(10px + env(safe-area-inset-top,0px));transform:translate(-50%,-80px);opacity:0;pointer-events:none;display:flex;align-items:center;gap:10px}
-#ptr img{display:block;width:40px;height:40px;border-radius:10px;box-shadow:0 6px 22px rgba(255,51,71,.35)}
-#ptr span{font:700 14px "Archivo",sans-serif;color:var(--bone);white-space:nowrap}
-#ptr.ready span{color:var(--gold)}
-#ptr.go img{animation:ptr-spin .8s linear infinite}
-@keyframes ptr-spin{to{transform:rotate(360deg)}}
+#ptr{position:fixed;z-index:60;left:50%;top:calc(6px + env(safe-area-inset-top,0px));transform:translate(-50%,-90px);opacity:0;pointer-events:none}
+#ptr img{display:block;height:74px;width:auto;clip-path:inset(0 100% 0 0);filter:drop-shadow(0 4px 10px rgba(0,0,0,.8))}
+/* reload screen: the signature writes itself, left to right, while the fresh page loads */
+#reload{position:fixed;inset:0;z-index:100;display:grid;place-items:center;background:radial-gradient(120% 60% at 50% 40%,#2a0710 0%,var(--bg) 62%);transition:opacity .4s ease}
+#reload img{width:min(56vw,230px);height:auto;animation:sign 1.6s cubic-bezier(.55,0,.25,1) infinite}
+#reload.out{opacity:0;pointer-events:none}
+@keyframes sign{0%{clip-path:inset(0 100% 0 0);opacity:1}55%{clip-path:inset(0 0 0 0);opacity:1}85%{clip-path:inset(0 0 0 0);opacity:1}100%{clip-path:inset(0 0 0 0);opacity:0}}
+@media (prefers-reduced-motion:reduce){#reload img{animation:none}}
 @media (max-width:480px){h1 .mf{margin-top:38px}.row{grid-template-columns:1fr;gap:0}}
 @media (prefers-reduced-motion:reduce){.bib.locked .stamp{animation:none;opacity:1;transform:rotate(-14deg)}}
 </style>
 </head>
 <body>
-<div id="ptr" aria-hidden="true"><img src="icon-180.png" alt=""><span>Pull to refresh</span></div>
+<div id="ptr" aria-hidden="true"><img src="johnvon-logo-red.png" alt=""></div>
+<div id="reload" role="status" aria-label="Refreshing" hidden><img src="johnvon-logo-red.png" alt=""></div>
+<script>try { if (sessionStorage.getItem('jv_reload')) document.getElementById('reload').hidden = false; } catch (e) {}</script>
 <main>
   <header class="hero">
     <span class="tag">COLLAB</span>
@@ -179,22 +183,32 @@ html,body{overscroll-behavior-y:contain}
   <footer>Gold dots on the calendar are dates I'm already booked.</footer>
 </main>
 <script>
-const VERSION = '2026-11-23g';   // bump on every publish; an old cached copy sees the new number and reloads itself
-const fresh = () => location.replace(location.pathname + '?v=' + Date.now() + location.hash);
+const VERSION = '2026-11-23h';   // bump on every publish; an old cached copy sees the new number and reloads itself
+const fresh = () => {   // show the signing screen, then load a fresh copy (never the cached one)
+  try { sessionStorage.setItem('jv_reload', '1'); } catch (e) {}
+  const R = document.getElementById('reload'); R.classList.remove('out'); R.hidden = false;
+  setTimeout(() => location.replace(location.pathname + '?v=' + Date.now() + location.hash), 900);
+};
+function reloadDone() {   // fade the signing screen out once the schedule is on screen
+  const R = document.getElementById('reload'); if (R.hidden) return;
+  try { sessionStorage.removeItem('jv_reload'); } catch (e) {}
+  setTimeout(() => { R.classList.add('out'); setTimeout(() => { R.hidden = true; R.classList.remove('out'); }, 450); }, 500);
+}
+setTimeout(reloadDone, 4000);   // never leave it up if something is slow
 (function () {   // pull down at the top to reload a fresh copy (never the cached one)
-  const P = document.getElementById('ptr'), T = P.querySelector('span'), MAX = 110, TRIGGER = 70; let y0 = null, pulled = 0;
+  const P = document.getElementById('ptr'), I = P.querySelector('img'), MAX = 120, TRIGGER = 80; let y0 = null, pulled = 0;
   document.addEventListener('touchstart', e => { y0 = scrollY <= 0 ? e.touches[0].clientY : null; pulled = 0; }, {passive: true});
   document.addEventListener('touchmove', e => {
     if (y0 === null) return; if (scrollY > 0) { y0 = null; pulled = 0; P.style.opacity = 0; return; }
     pulled = Math.min(MAX, Math.max(0, (e.touches[0].clientY - y0) * 0.6));
     P.style.opacity = pulled > 8 ? Math.min(1, pulled / TRIGGER) : 0;
-    P.style.transform = `translate(-50%, ${pulled - 60}px)`; P.querySelector('img').style.transform = `rotate(${pulled * 4}deg)`;
-    const ready = pulled >= TRIGGER; P.classList.toggle('ready', ready); T.textContent = ready ? 'Let go to refresh' : 'Pull to refresh';
+    P.style.transform = `translate(-50%, ${pulled - 70}px)`;
+    I.style.clipPath = `inset(0 ${Math.max(0, 100 - pulled / TRIGGER * 100)}% 0 0)`;   // the pull writes the signature
   }, {passive: true});
   document.addEventListener('touchend', () => {
     if (y0 === null) return; y0 = null;
-    if (pulled >= TRIGGER) { P.classList.add('go'); T.textContent = 'Refreshing...'; P.style.transform = 'translate(-50%, 14px)'; setTimeout(fresh, 350); }
-    else { P.style.opacity = 0; P.style.transform = 'translate(-50%,-80px)'; }
+    if (pulled >= TRIGGER) { P.style.opacity = 0; fresh(); }
+    else { P.style.opacity = 0; P.style.transform = 'translate(-50%,-90px)'; I.style.clipPath = 'inset(0 100% 0 0)'; }
   });
 })();
 fetch(location.pathname + '?check=' + Date.now(), {cache: 'no-store'}).then(r => r.text())   // auto-update an old cached copy
@@ -283,6 +297,7 @@ function venues(v) {
 }
 
 function render(r) {
+  reloadDone();
   venues(r.venues);
   booked = new Set((r.upcoming || []).filter(e => !e.cancelled && e.status !== 'declined').map(e => e.date)); drawCal();
   const L = $('list'); L.innerHTML = '';
