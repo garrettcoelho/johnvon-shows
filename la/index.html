@@ -90,6 +90,11 @@ h2{font-weight:900;font-stretch:80%;font-size:26px;margin:44px 0 12px;text-trans
 .x{appearance:none;background:none;border:1px solid var(--line);color:var(--smoke);border-radius:8px;padding:8px 10px;font:600 13px "Archivo",sans-serif;cursor:pointer;min-height:40px}
 .x:hover{color:var(--neon);border-color:var(--neon)}
 .cx .w,.cx .d{opacity:.4;text-decoration:line-through}
+.w .st{display:inline-block;margin-top:6px;font:800 11px/1.3 "Archivo",sans-serif;letter-spacing:.03em;padding:3px 9px;border-radius:999px;white-space:nowrap}
+.w .st-wait{color:var(--bone);border:1px dashed var(--smoke)}
+.w .st-ok{color:#14050A;background:var(--gold)}
+.w .st-no{color:#fff;background:var(--neon)}
+.dx .w,.dx .d{opacity:.55}
 .empty-list{color:var(--smoke);padding:16px 0;font-size:15px}
 footer{margin-top:48px;color:var(--smoke);font-size:13px;text-align:center}
 /* tap-to-pick calendar */
@@ -133,7 +138,7 @@ html,body{overscroll-behavior-y:contain}
     <img class="sig" src="johnvon-logo-red.png" alt="JohnVon">
   </header>
   <p class="for">for LA</p>
-  <p class="lede">Put me on the schedule. It goes straight onto my calendar, so I'm locked in and I won't forget.</p>
+  <p class="lede">Put me on the schedule. It goes straight onto my calendar, and you'll see it here when I confirm.</p>
   <div class="tip" id="tip" hidden><span>Keep this as an app: tap <b>Share</b>, then <b>Add to Home Screen</b>.</span><button type="button" id="tipOk">Got it</button></div>
 
   <div class="bib" id="bib" aria-live="polite">
@@ -142,7 +147,7 @@ html,body{overscroll-behavior-y:contain}
     <div class="bib-num empty" id="bNum">0000</div>
     <div class="bib-strip"><span class="bib-where" id="bWhere">Pick a date and a spot</span><b id="bTime">7:00 PM</b></div>
     <p class="bib-foot" id="bDay">Run Club For MFs That Don't Run</p>
-    <div class="stamp">LOCKED IN</div>
+    <div class="stamp">BOOKED</div>
   </div>
 
   <form id="f" novalidate>
@@ -174,7 +179,7 @@ html,body{overscroll-behavior-y:contain}
   <footer>Gold dots on the calendar are dates I'm already booked.</footer>
 </main>
 <script>
-const VERSION = '2026-11-23f';   // bump on every publish; an old cached copy sees the new number and reloads itself
+const VERSION = '2026-11-23g';   // bump on every publish; an old cached copy sees the new number and reloads itself
 const fresh = () => location.replace(location.pathname + '?v=' + Date.now() + location.hash);
 (function () {   // pull down at the top to reload a fresh copy (never the cached one)
   const P = document.getElementById('ptr'), T = P.querySelector('span'), MAX = 110, TRIGGER = 70; let y0 = null, pulled = 0;
@@ -279,15 +284,18 @@ function venues(v) {
 
 function render(r) {
   venues(r.venues);
-  booked = new Set((r.upcoming || []).filter(e => !e.cancelled).map(e => e.date)); drawCal();
+  booked = new Set((r.upcoming || []).filter(e => !e.cancelled && e.status !== 'declined').map(e => e.date)); drawCal();
   const L = $('list'); L.innerHTML = '';
   const up = (r.upcoming || []).sort((a,b) => (a.date + a.start).localeCompare(b.date + b.start));
   if (!up.length) { L.innerHTML = '<li class="empty-list">Nothing booked yet. Pick a date above.</li>'; return; }
   up.forEach(e => {
-    const d = parse(e.date), li = document.createElement('li'); if (e.cancelled) li.className = 'cx';
+    const d = parse(e.date), li = document.createElement('li'); if (e.cancelled) li.className = 'cx'; else if (e.status === 'declined') li.className = 'dx';
     const dd = document.createElement('div'); dd.className = 'd'; dd.innerHTML = `${d.getDate()}<small>${MON[d.getMonth()]}</small>`;
     const w = document.createElement('div'); w.className = 'w'; w.textContent = e.where;
     const s = document.createElement('span'); s.textContent = e.cancelled ? 'Cancelled' : `${DOW[d.getDay()]}, ${t12(e.start)} to ${t12(e.end)}`; w.appendChild(s);
+    if (!e.cancelled) { const st = document.createElement('span'); const k = e.status || 'confirmed';
+      st.className = 'st ' + (k === 'pending' ? 'st-wait' : k === 'declined' ? 'st-no' : 'st-ok');
+      st.textContent = k === 'pending' ? 'Waiting on John' : k === 'declined' ? "John can't make this one" : 'Confirmed by John \u2713'; w.appendChild(st); }
     li.append(dd, w);
     if (!e.cancelled) { const acts = document.createElement('div'); acts.className = 'acts';
       const c = document.createElement('button'); c.className = 'x'; c.textContent = 'Change'; c.onclick = () => startEdit(e);
@@ -304,7 +312,7 @@ async function call(body) {
   return r.json();
 }
 
-let demoData = {upcoming: [{id:'1', date: ymd(new Date(Date.now()+86400000)), start:'19:00', end:'21:00', where:'Topgolf St. Pete'}], venues: ['Topgolf St. Pete']};
+let demoData = {upcoming: [{id:'1', date: ymd(new Date(Date.now()+86400000)), start:'19:00', end:'21:00', where:'Topgolf St. Pete', status:'confirmed'}, {id:'2', date:'2026-12-02', start:'19:00', end:'21:00', where:'Tampa', status:'pending'}, {id:'3', date:'2026-12-05', start:'09:30', end:'11:30', where:'St. Pete', status:'declined'}], venues: ['Topgolf St. Pete']};
 function demo(b) { if (b && b.action === 'edit') { const x = demoData.upcoming.find(u => u.id === b.id); Object.assign(x, {date: b.date, start: b.start, end: b.end || x.end, where: b.where}); }
   if (b && !b.action) (b.dates || [b.date]).forEach(dd => demoData.upcoming.push({id: String(Math.random()), date: dd, start: b.start, end: b.end || String((+b.start.slice(0,2)+2)%24).padStart(2,'0')+b.start.slice(2), where: b.where}));
   return Promise.resolve(Object.assign({ok: true}, demoData)); }
@@ -340,7 +348,7 @@ $('f').addEventListener('submit', async ev => {
     try {
       const r = await call({action: 'edit', id: editing.id, date: b.dates[0], start: b.start, end: b.end, where: b.where, note: b.note});
       if (!r.ok) { if (r.error === 'bad link') return locked(); throw new Error(r.error); }
-      render(r); stopEdit(); $('bib').classList.add('locked'); msg("Saved. My calendar has the new details.", 'ok');
+      render(r); stopEdit(); $('bib').classList.add('locked'); msg("Saved. You'll see it confirmed here once I check the change.", 'ok');
     } catch (x) { msg(x.message || "That didn't go through. Try again or text John.", 'err'); $('go').textContent = 'Save changes'; }
     $('go').disabled = false; return;
   }
@@ -349,7 +357,7 @@ $('f').addEventListener('submit', async ev => {
     const r = await call(b); if (!r.ok) { if (r.error === 'bad link') return locked(); throw new Error(r.error); }
     $('bib').classList.add('locked'); render(r);
     const n = b.dates.length; picked.clear(); drawCal();
-    msg(n === 1 ? `Locked in. It's on my calendar.` : `Locked in ${n} dates. They're all on my calendar.`, 'ok');
+    msg(n === 1 ? `Booked. It's on my calendar, and you'll see it confirmed here once I check it.` : `Booked ${n} dates. They're on my calendar, and you'll see each one confirmed here.`, 'ok');
     $('note').value = ''; $('end').value = '';
   } catch (x) { msg(x.message || 'That didn\'t go through. Try again or text John.', 'err'); }
   $('go').disabled = false; $('go').textContent = 'Lock it in';
