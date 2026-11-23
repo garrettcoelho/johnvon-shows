@@ -1,0 +1,214 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<meta name="theme-color" content="#090506">
+<title>JohnVon | Booking kit</title>
+<meta property="og:title" content="JohnVon | Tampa Bay house DJ">
+<meta property="og:description" content="Mixes, venues and a simple way to book JohnVon for your spot.">
+<meta property="og:image" content="https://shows.itsjohnvon.com/kit/photo-1.jpg">
+<link rel="icon" href="../icon-32.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&family=Bodoni+Moda:ital,opsz,wght@1,6..96,400..700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#090506;--velvet:#5B0B1B;--neon:#FF3347;--gold:#CDA85A;--bone:#EFE6DA;--smoke:#A8978D;--line:#2E181C;--field:#140A0D}
+*{box-sizing:border-box;margin:0}
+[hidden]{display:none!important}
+html,body{overflow-x:hidden;max-width:100%}
+html{background:var(--bg)}
+body{background:radial-gradient(120% 50% at 50% -5%,#2a0710 0%,var(--bg) 55%);color:var(--bone);font-family:"Archivo",system-ui,sans-serif;min-height:100vh;padding:26px 16px 70px;-webkit-font-smoothing:antialiased}
+button{touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+main{max-width:520px;margin:0 auto}
+.hi{font-family:"Bodoni Moda",serif;font-style:italic;font-size:22px;color:var(--gold);text-align:center}
+.sig{display:block;width:min(62vw,260px);height:auto;margin:6px auto 0;filter:drop-shadow(0 6px 16px rgba(0,0,0,.7))}
+.tag{text-align:center;font:800 15px "Archivo",sans-serif;letter-spacing:.14em;color:var(--smoke);margin-top:6px}
+.hero-photo{position:relative;margin:22px -16px 0;height:min(118vw,560px);overflow:hidden}
+.hero-photo img{width:100%;height:100%;object-fit:cover;filter:saturate(1.05)}
+.hero-photo::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(9,5,6,0) 55%,var(--bg) 100%)}
+.ref{position:relative;z-index:2;margin:-70px 0 0;background:#160b0e;border:1px solid var(--gold);border-radius:16px;padding:16px 18px}
+.ref b{display:block;font:800 13px "Archivo",sans-serif;letter-spacing:.08em;color:var(--gold);margin-bottom:6px}
+.ref p{font-size:16px;line-height:1.45}
+h2{font:900 30px/1 "Archivo",sans-serif;font-stretch:80%;text-transform:uppercase;margin:42px 0 12px;color:#fff}
+.lead{font-size:17px;line-height:1.5;color:var(--bone)}
+.sub{color:var(--smoke);font-size:15px;line-height:1.5;margin-top:10px}
+.venues{display:flex;flex-wrap:wrap;gap:8px}
+.venues span{border:1px solid var(--line);background:var(--field);border-radius:999px;padding:8px 13px;font-weight:700;font-size:14px}
+.venues span.c{border-style:dashed;color:var(--smoke)}
+.photos{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:4px}
+.photos img{width:100%;aspect-ratio:3/4;object-fit:cover;border-radius:12px;display:block}
+.mix{margin-bottom:12px;border-radius:12px;overflow:hidden;border:1px solid var(--line)}
+.price{display:grid;gap:10px}
+.card{border-radius:16px;padding:18px;border:1px solid var(--line);background:var(--field)}
+.card.hot{border:2px solid var(--neon);background:linear-gradient(180deg,#2a0b12,#160b0e);box-shadow:0 0 30px rgba(255,51,71,.18)}
+.card .k{font:800 12px "Archivo",sans-serif;letter-spacing:.1em;color:var(--smoke)}
+.card.hot .k{color:var(--neon)}
+.card .v{font:900 40px/1 "Archivo",sans-serif;font-stretch:80%;margin-top:6px;color:#fff}
+.card .v small{font-size:16px;font-weight:700;color:var(--smoke)}
+.card .m{margin-top:6px;font-size:15px;color:var(--bone)}
+.card.was .v{text-decoration:line-through;text-decoration-color:var(--neon);opacity:.55}
+label{display:block;font-weight:700;font-size:14px;margin:0 0 6px}
+.hint{font-weight:400;color:var(--smoke)}
+.f{margin-bottom:14px}
+.row{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px}
+.row .f{min-width:0}
+input,textarea{width:100%;min-width:0;max-width:100%;display:block;-webkit-appearance:none;appearance:none;background:var(--field);color:var(--bone);border:1px solid var(--line);border-radius:10px;padding:13px 14px;font:500 16px "Archivo",sans-serif;color-scheme:dark;min-height:48px}
+textarea{min-height:80px;resize:vertical}
+input[type=time]{text-align:left}
+input:focus,textarea:focus,button:focus-visible,a:focus-visible{outline:2px solid var(--neon);outline-offset:2px}
+.go{width:100%;border:0;border-radius:12px;background:var(--neon);color:#fff;font:900 22px "Archivo",sans-serif;font-stretch:80%;padding:18px;cursor:pointer;box-shadow:0 0 28px rgba(255,51,71,.45);text-transform:uppercase;margin-top:6px}
+.go:disabled{opacity:.6}
+.msg{min-height:22px;margin-top:12px;font-weight:600;font-size:15px;text-align:center}
+.msg.err{color:var(--neon)}.msg.ok{color:var(--gold)}
+.done{border:1px solid var(--gold);border-radius:16px;padding:20px;text-align:center}
+.done b{display:block;font:900 24px "Archivo",sans-serif;font-stretch:85%;color:#fff;margin-bottom:6px}
+.links{display:grid;gap:8px}
+.links a{display:flex;justify-content:space-between;align-items:center;border:1px solid var(--line);background:var(--field);border-radius:12px;padding:14px 16px;color:var(--bone);text-decoration:none;font-weight:700}
+.links a span{color:var(--smoke);font-weight:500}
+.where-wrap{position:relative}
+.sugg{position:absolute;left:0;right:0;top:calc(100% + 4px);z-index:20;list-style:none;margin:0;padding:6px;background:#1a0e11;border:1px solid var(--line);border-radius:12px;box-shadow:0 14px 30px rgba(0,0,0,.6)}
+.sugg li{padding:10px 12px;border-radius:8px;cursor:pointer;line-height:1.25}
+.sugg li b{display:block;font-weight:700;font-size:15px}
+.sugg li span{display:block;font-size:13px;color:var(--smoke);margin-top:2px}
+.sugg li:hover{background:#2a1418}
+.sugg .by{font-size:11px;color:var(--smoke);text-align:right;cursor:default}
+footer{margin-top:48px;color:var(--smoke);font-size:13px;text-align:center}
+@media (max-width:480px){.row{grid-template-columns:1fr;gap:0}}
+</style>
+</head>
+<body>
+<main>
+  <p class="hi" id="hi">Hey there,</p>
+  <img class="sig" src="johnvon-logo-red.png" alt="JohnVon">
+  <p class="tag" id="tagline"></p>
+  <div class="hero-photo"><img id="heroImg" alt="JohnVon DJing"></div>
+  <div class="ref" id="refCard" hidden><b id="refTitle"></b><p id="refText"></p></div>
+
+  <h2>The sound</h2>
+  <p class="lead" id="sound"></p>
+  <p class="sub" id="bio"></p>
+
+  <h2>Played at</h2>
+  <div class="venues" id="venues"></div>
+
+  <div class="photos" id="photos" style="margin-top:22px"></div>
+
+  <section id="mixWrap" hidden><h2>Mixes</h2><div id="mixes"></div></section>
+
+  <h2>Rates</h2>
+  <div class="price" id="price"></div>
+
+  <h2 id="bookTitle">Book a date</h2>
+  <form id="f" novalidate>
+    <div class="row">
+      <div class="f"><label for="date">Date</label><input type="date" id="date" required></div>
+      <div class="f"><label for="hours">Hours <span class="hint">(how long)</span></label><input type="number" id="hours" min="1" max="12" step="1" value="2" inputmode="numeric"></div>
+    </div>
+    <div class="row">
+      <div class="f"><label for="start">Start</label><input type="time" id="start" value="20:00"></div>
+      <div class="f"><label for="end">Done by <span class="hint">(optional)</span></label><input type="time" id="end"></div>
+    </div>
+    <div class="f"><label for="where">Venue / address</label>
+      <div class="where-wrap"><input id="where" autocomplete="off" placeholder="Start typing your venue"><ul class="sugg" id="sugg" hidden></ul></div></div>
+    <div class="f"><label for="who">Your name</label><input id="who" autocomplete="name" required></div>
+    <div class="row">
+      <div class="f"><label for="phone">Phone</label><input id="phone" type="tel" autocomplete="tel" inputmode="tel"></div>
+      <div class="f"><label for="email">Email</label><input id="email" type="email" autocomplete="email"></div>
+    </div>
+    <div class="f"><label for="note">Anything else? <span class="hint">(the vibe, a weekly night, budget)</span></label><textarea id="note"></textarea></div>
+    <button class="go" id="go" type="submit">Request this date</button>
+    <p class="msg" id="msg" role="status"></p>
+  </form>
+  <div class="done" id="done" hidden><b>Request sent</b><p class="sub">JohnVon will get back to you soon. If you want him regularly, you'll get your own booking page so it's one tap every time.</p></div>
+
+  <h2>Find him</h2>
+  <div class="links" id="links"></div>
+  <footer>JohnVon Productions. A Firm Foundation.</footer>
+</main>
+<script>
+const KIT = {"name": "JohnVon", "tagline": "Tampa Bay house DJ", "sound": "Minimal, tech and deep house. Groovy day-party energy that carries into the late night.", "bio": "JohnVon is a Tampa Bay DJ who reads the room and keeps it moving. From run clubs and pool parties to packed St. Pete nights, he plays house music people actually dance to.", "venues": ["The Estate", "Tryst", "Red Thread", "Copper Shaker", "Hollander Hotel", "SkyBeach Resort", "Hotel Alba", "Soundlab", "Boohoff Foundation event", "Run Club For MFs That Don't Run"], "collectives": ["Phat Basslines", "Rotating Frequencies", "House Hats Collective"], "photos": ["photo-1.jpg", "photo-2.jpg", "photo-3.jpg", "photo-4.jpg"], "mixes": ["https://soundcloud.com/user-503165579/vons-mini-mix-4", "https://soundcloud.com/user-503165579/vons-mini-mix-2-1"], "email": "john@itsjohnvon.com", "instagram": "john.vondutch", "tiktok": "johnvonhq", "rates": {"normal_hour": 200, "normal_min": 400, "ref_hour": 100, "ref_min": 200, "ref_period": "first month"}, "referrers": {"la": {"name": "Run Club", "org": "Run Club For MFs That Don't Run", "team": ["LA", "Jeff", "Rusty"]}}};
+const API = 'https://script.google.com/macros/s/AKfycbxv0d2CoaQJnfbWkXmuHNWUOcRiWbtCDvTizeGInfd4o2BS832bNYwIaJrljqCiLFlZKQ/exec';
+const MAPS_KEY = 'AIzaSyAJctUkAJCvC9fkdmvcJZA-vRRsoCzuCVc';
+const $ = id => document.getElementById(id);
+const P = new URLSearchParams(location.hash.slice(1));
+const venueName = (P.get('v') || '').slice(0, 80), toName = (P.get('to') || '').slice(0, 40), refKey = P.get('r') || '', sendId = (P.get('id') || '').slice(0, 24);
+const ref = KIT.referrers[refKey] || null;
+const by = ((P.get('by') || '').replace(/[^A-Za-z .'-]/g, '').slice(0, 20)).trim();   // who on the crew sent it
+const money = n => '$' + n.toLocaleString();
+
+// personal greeting + referrer stamp
+$('hi').textContent = toName ? `Hey ${toName},` : venueName ? `Hey ${venueName},` : 'Hey there,';
+if (venueName) document.title = `JohnVon for ${venueName}`;
+$('tagline').textContent = KIT.tagline.toUpperCase();
+$('heroImg').src = KIT.photos[0];
+if (ref) {
+  $('refCard').hidden = false;
+  $('refTitle').textContent = by ? `RECOMMENDED BY ${by.toUpperCase()}, ${ref.org.toUpperCase()}` : `RECOMMENDED BY ${ref.org.toUpperCase()}`;
+  $('refText').textContent = `JohnVon DJs for ${ref.org}${by ? ', and ' + by + ' thinks' : '. They think'} he'd be a great fit${venueName ? ' for ' + venueName : ''}. Since it came from them, you get the referral rate for your ${KIT.rates.ref_period}.`;
+}
+$('sound').textContent = KIT.sound; $('bio').textContent = KIT.bio;
+KIT.venues.forEach(v => { const s = document.createElement('span'); s.textContent = v; $('venues').appendChild(s); });
+KIT.collectives.forEach(v => { const s = document.createElement('span'); s.className = 'c'; s.textContent = v; $('venues').appendChild(s); });
+KIT.photos.slice(1).concat(KIT.photos.slice(0, 1)).slice(0, 4).forEach(p => { const i = document.createElement('img'); i.src = p; i.alt = 'JohnVon DJing'; i.loading = 'lazy'; $('photos').appendChild(i); });
+if (KIT.mixes.length) { $('mixWrap').hidden = false; KIT.mixes.forEach(u => { const d = document.createElement('div'); d.className = 'mix';
+  d.innerHTML = `<iframe width="100%" height="166" scrolling="no" frameborder="no" allow="autoplay" loading="lazy" src="https://w.soundcloud.com/player/?url=${encodeURIComponent(u)}&color=%23ff3347&auto_play=false&show_comments=false&show_user=true&show_reposts=false&show_teaser=false"></iframe>`; $('mixes').appendChild(d); }); }
+
+// rates: referral rate up front when a referrer sent it
+const R = KIT.rates, price = $('price');
+if (ref) {
+  price.innerHTML = `<div class="card hot"><div class="k">${ref.name.toUpperCase()} REFERRAL RATE, ${R.ref_period.toUpperCase()}</div><div class="v">${money(R.ref_hour)}<small>/hour</small></div><div class="m">${money(R.ref_min)} minimum to show up. After the ${R.ref_period}, we'll set a rate together based on how it's going.</div></div>
+  <div class="card was"><div class="k">NORMAL RATE</div><div class="v">${money(R.normal_hour)}<small>/hour</small></div><div class="m">${money(R.normal_min)} minimum</div></div>`;
+} else {
+  price.innerHTML = `<div class="card"><div class="k">RATE</div><div class="v">${money(R.normal_hour)}<small>/hour</small></div><div class="m">${money(R.normal_min)} minimum to show up</div></div>`;
+}
+
+// links
+[['Instagram', '@' + KIT.instagram, 'https://instagram.com/' + KIT.instagram], ['TikTok', '@' + KIT.tiktok, 'https://www.tiktok.com/@' + KIT.tiktok],
+ ['Email', KIT.email, 'mailto:' + KIT.email]].forEach(([k, v, u]) => { const a = document.createElement('a'); a.href = u; a.target = u.startsWith('http') ? '_blank' : ''; a.rel = 'noopener';
+  a.innerHTML = `${k} <span></span>`; a.querySelector('span').textContent = v; $('links').appendChild(a); });
+if (venueName) $('where').value = venueName;
+
+// tell John once that this venue opened the kit
+if (sendId && API) { try { if (!localStorage.getItem('kv_' + sendId)) { localStorage.setItem('kv_' + sendId, '1');
+  fetch(API, {method: 'POST', body: JSON.stringify({action: 'kit_view', id: sendId, venue: venueName, to: toName, ref: refKey})}).catch(() => {}); } } catch (e) {} }
+
+// Google address search (same key as the booking pages)
+let ses = crypto.randomUUID ? crypto.randomUUID() : String(Math.random()).slice(2), tmr = null, seq = 0;
+const hide = () => { $('sugg').hidden = true; $('sugg').innerHTML = ''; };
+async function search(q) { const n = ++seq;
+  try { const r = await fetch('https://places.googleapis.com/v1/places:autocomplete', {method: 'POST', headers: {'Content-Type': 'application/json', 'X-Goog-Api-Key': MAPS_KEY},
+      body: JSON.stringify({input: q, sessionToken: ses, locationRestriction: {circle: {center: {latitude: 27.85, longitude: -82.6}, radius: 50000}}})});
+    const d = await r.json(); if (n !== seq) return; const L = (d.suggestions || []).map(x => x.placePrediction).filter(Boolean).slice(0, 5);
+    if (!L.length) return hide(); const U = $('sugg'); U.innerHTML = '';
+    L.forEach(p => { const li = document.createElement('li'); const b = document.createElement('b'); b.textContent = p.structuredFormat ? p.structuredFormat.mainText.text : p.text.text;
+      const s = document.createElement('span'); s.textContent = p.structuredFormat && p.structuredFormat.secondaryText ? p.structuredFormat.secondaryText.text : ''; li.append(b, s);
+      li.addEventListener('mousedown', e => e.preventDefault()); li.onclick = () => pick(p); U.appendChild(li); });
+    const by = document.createElement('li'); by.className = 'by'; by.textContent = 'Search by Google'; U.appendChild(by); U.hidden = false;
+  } catch (e) { hide(); } }
+async function pick(p) { hide(); const name = p.structuredFormat ? p.structuredFormat.mainText.text : p.text.text; $('where').value = p.text.text.replace(/, USA$/, '');
+  try { const d = await fetch(`https://places.googleapis.com/v1/places/${p.placeId}?sessionToken=${encodeURIComponent(ses)}`, {headers: {'X-Goog-Api-Key': MAPS_KEY, 'X-Goog-FieldMask': 'formattedAddress'}}).then(r => r.json());
+    if (d.formattedAddress) { const a = d.formattedAddress.replace(/, USA$/, ''); $('where').value = a.toLowerCase().startsWith(name.toLowerCase()) ? a : `${name}, ${a}`; } } catch (e) {}
+  ses = crypto.randomUUID ? crypto.randomUUID() : String(Math.random()).slice(2); }
+if (MAPS_KEY) { $('where').addEventListener('input', () => { clearTimeout(tmr); const q = $('where').value.trim(); if (q.length < 3) return hide(); tmr = setTimeout(() => search(q), 280); });
+  $('where').addEventListener('blur', () => setTimeout(hide, 150)); }
+
+// request a date
+const msg = (t, k) => { $('msg').textContent = t; $('msg').className = 'msg ' + (k || ''); };
+$('f').addEventListener('submit', async ev => {
+  ev.preventDefault();
+  const b = {action: 'kit_request', id: sendId, ref: refKey, venue: venueName, date: $('date').value, start: $('start').value, end: $('end').value,
+    hours: $('hours').value, where: $('where').value.trim(), who: $('who').value.trim(), phone: $('phone').value.trim(), email: $('email').value.trim(), by: by, note: $('note').value.trim()};
+  if (!b.date) return msg('Pick a date.', 'err');
+  if (!b.where) return msg('Add the venue or address.', 'err');
+  if (!b.who) return msg('Add your name.', 'err');
+  if (!b.phone && !b.email) return msg('Add a phone or email so John can reach you.', 'err');
+  $('go').disabled = true; $('go').textContent = 'Sending...'; msg('');
+  try { const r = await fetch(API, {method: 'POST', body: JSON.stringify(b)}).then(r => r.json()); if (!r.ok) throw new Error(r.error);
+    $('f').hidden = true; $('done').hidden = false; $('done').scrollIntoView({behavior: 'smooth', block: 'center'});
+  } catch (e) { msg(e.message || "That didn't go through. Email " + KIT.email, 'err'); }
+  $('go').disabled = false; $('go').textContent = 'Request this date';
+});
+</script>
+</body>
+</html>
