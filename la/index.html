@@ -7,7 +7,10 @@
 <meta name="theme-color" content="#090506">
 <title>Run Club for MFs That Don't Run x JohnVon</title>
 <link rel="icon" href="../icon-32.png">
-<link rel="apple-touch-icon" href="../icon-180.png">
+<link rel="apple-touch-icon" href="icon-180.png">
+<meta name="apple-mobile-web-app-title" content="Run Club x JV">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&family=Graduate&family=Bodoni+Moda:ital,opsz,wght@1,6..96,400..700&display=swap" rel="stylesheet">
 <style>
@@ -83,6 +86,22 @@ h2{font-weight:900;font-stretch:80%;font-size:26px;margin:44px 0 12px;text-trans
 .cx .w,.cx .d{opacity:.4;text-decoration:line-through}
 .empty-list{color:var(--smoke);padding:16px 0;font-size:15px}
 footer{margin-top:48px;color:var(--smoke);font-size:13px;text-align:center}
+/* tap-to-pick calendar */
+.cal{background:var(--field);border:1px solid var(--line);border-radius:12px;padding:12px}
+.cal-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;font-weight:800;font-size:16px}
+.cal-head button{appearance:none;background:none;border:1px solid var(--line);color:var(--bone);border-radius:8px;width:44px;height:38px;cursor:pointer;font-size:18px}
+.cal-head button:disabled{opacity:.3;cursor:default}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;text-align:center}
+.cal-grid .dw{font-size:11px;color:var(--smoke);font-weight:700;padding:4px 0}
+.cal-grid button{appearance:none;border:0;background:none;color:var(--bone);font:600 15px "Archivo",sans-serif;height:40px;border-radius:9px;cursor:pointer;position:relative}
+.cal-grid button:disabled{color:#4d3b40;cursor:default}
+.cal-grid button.on{background:var(--neon);color:#fff;box-shadow:0 0 14px rgba(255,51,71,.45)}
+.cal-grid button.booked::after{content:"";position:absolute;left:50%;bottom:5px;width:5px;height:5px;margin-left:-2.5px;border-radius:50%;background:var(--gold)}
+.cal-foot{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;align-items:center}
+.cal-foot .chip{font-size:13px;padding:7px 12px;min-height:36px}
+.cal-sum{font-size:13px;color:var(--smoke);margin-left:auto}
+.tip{display:flex;gap:12px;align-items:center;background:#1d1013;border:1px dashed var(--gold);border-radius:12px;padding:12px 14px;margin:18px 0 0;font-size:14px;line-height:1.4}
+.tip button{appearance:none;flex:none;background:var(--gold);color:#14050A;border:0;border-radius:8px;padding:8px 12px;font:800 13px "Archivo",sans-serif;cursor:pointer}
 @media (max-width:480px){h1 .mf{margin-top:38px}}
 @media (prefers-reduced-motion:reduce){.bib.locked .stamp{animation:none;opacity:1;transform:rotate(-14deg)}}
 </style>
@@ -97,6 +116,7 @@ footer{margin-top:48px;color:var(--smoke);font-size:13px;text-align:center}
   </header>
   <p class="for">for LA</p>
   <p class="lede">Put me on the schedule. It goes straight onto my calendar, so I'm locked in and I won't forget.</p>
+  <div class="tip" id="tip" hidden><span>Keep this as an app: tap <b>Share</b>, then <b>Add to Home Screen</b>.</span><button type="button" id="tipOk">Got it</button></div>
 
   <div class="bib" id="bib" aria-live="polite">
     <i class="pin a"></i><i class="pin b"></i><i class="pin c"></i><i class="pin d"></i>
@@ -112,11 +132,12 @@ footer{margin-top:48px;color:var(--smoke);font-size:13px;text-align:center}
       <button type="button" class="chip" data-dow="3" data-city="Tampa" data-time="19:00">Next Wednesday in Tampa</button>
       <button type="button" class="chip" data-dow="6" data-city="St. Pete" data-time="09:30">Next Saturday in St. Pete</button>
     </div>
+    <div class="f"><label id="calLbl">Dates <span class="hint">(tap as many as you want)</span></label>
+      <div class="cal" id="cal" role="group" aria-labelledby="calLbl"></div></div>
     <div class="row">
-      <div class="f"><label for="date">Date</label><input type="date" id="date" required></div>
       <div class="f"><label for="start">Start</label><input type="time" id="start" value="19:00" required></div>
+      <div class="f"><label for="end">Done by <span class="hint">(optional)</span></label><input type="time" id="end"></div>
     </div>
-    <div class="f"><label for="end">Done by <span class="hint">(optional, 2 hours if blank)</span></label><input type="time" id="end"></div>
     <div class="f">
       <label for="where">Where</label>
       <input id="where" autocomplete="off" placeholder="Venue and address" required>
@@ -131,14 +152,19 @@ footer{margin-top:48px;color:var(--smoke);font-size:13px;text-align:center}
   <h2>On the schedule</h2>
   <ul class="list" id="list"><li class="empty-list">Loading...</li></ul>
 
-  <footer>Save this page to your home screen and use it every time.</footer>
+  <footer>Gold dots on the calendar are dates I'm already booked.</footer>
 </main>
 <script>
 const API = 'https://script.google.com/macros/s/AKfycbxv0d2CoaQJnfbWkXmuHNWUOcRiWbtCDvTizeGInfd4o2BS832bNYwIaJrljqCiLFlZKQ/exec';   // Google Apps Script web app (john@itsjohnvon.com)
 // LA's key lives only in his link (after the #). It is never in this file or sent to the website.
 const KEY = (() => { const m = location.hash.match(/k=([\w-]+)/); let k = m ? m[1] : '';
   try { if (k) localStorage.setItem('jv_k', k); else k = localStorage.getItem('jv_k') || ''; } catch (e) {} return k; })();
+if (KEY && !/k=/.test(location.hash)) history.replaceState(null, '', location.pathname + '#k=' + KEY);   // so Add to Home Screen keeps the key
 const $ = id => document.getElementById(id);
+const picked = new Set(); let booked = new Set();
+const today = new Date(); today.setHours(0,0,0,0);
+let view = new Date(today.getFullYear(), today.getMonth(), 1);
+const MONTH = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 const DOW = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
 const MON = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 const ymd = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
@@ -147,20 +173,59 @@ const t12 = s => { if (!s) return ''; let [h,m] = s.split(':').map(Number); cons
 const live = API.startsWith('https://');
 
 function paint() {
-  const ds = $('date').value, w = $('where').value.trim(), st = $('start').value;
-  $('bNum').textContent = ds ? ds.slice(5).replace('-', '') : '0000';
-  $('bNum').classList.toggle('empty', !ds);
+  const ds = [...picked].sort(), w = $('where').value.trim(), st = $('start').value;
+  $('bNum').textContent = ds.length ? ds[0].slice(5).replace('-', '') : '0000';
+  $('bNum').classList.toggle('empty', !ds.length);
   $('bWhere').textContent = w || 'Pick a date and a spot';
   $('bTime').textContent = t12(st) || 'TBD';
-  $('bDay').textContent = ds ? `${DOW[parse(ds).getDay()]}, ${MON[parse(ds).getMonth()]} ${parse(ds).getDate()}` : "Run Club For MFs That Don't Run";
+  const nice = d => `${MON[parse(d).getMonth()]} ${parse(d).getDate()}`;
+  $('bDay').textContent = !ds.length ? "Run Club For MFs That Don't Run"
+    : ds.length === 1 ? `${DOW[parse(ds[0]).getDay()]}, ${nice(ds[0])}`
+    : `${ds.length} dates: ${ds.slice(0, 4).map(nice).join(', ')}${ds.length > 4 ? ', more' : ''}`;
   $('bib').classList.remove('locked');
 }
-['date','start','where'].forEach(id => $(id).addEventListener('input', paint));
+
+function drawCal() {
+  const C = $('cal'); C.innerHTML = '';
+  const y = view.getFullYear(), m = view.getMonth();
+  const head = document.createElement('div'); head.className = 'cal-head';
+  const prev = document.createElement('button'); prev.type = 'button'; prev.textContent = '‹'; prev.setAttribute('aria-label', 'Previous month');
+  prev.disabled = y === today.getFullYear() && m === today.getMonth(); prev.onclick = () => { view = new Date(y, m - 1, 1); drawCal(); };
+  const next = document.createElement('button'); next.type = 'button'; next.textContent = '›'; next.setAttribute('aria-label', 'Next month');
+  next.onclick = () => { view = new Date(y, m + 1, 1); drawCal(); };
+  const t = document.createElement('span'); t.textContent = `${MONTH[m]} ${y}`;
+  head.append(prev, t, next); C.appendChild(head);
+  const g = document.createElement('div'); g.className = 'cal-grid';
+  'SMTWTFS'.split('').forEach(d => { const e = document.createElement('span'); e.className = 'dw'; e.textContent = d; g.appendChild(e); });
+  for (let i = 0; i < new Date(y, m, 1).getDay(); i++) g.appendChild(document.createElement('span'));
+  const days = new Date(y, m + 1, 0).getDate();
+  for (let d = 1; d <= days; d++) {
+    const dt = new Date(y, m, d), k = ymd(dt), b = document.createElement('button'); b.type = 'button'; b.textContent = d;
+    b.disabled = dt < today; b.setAttribute('aria-pressed', picked.has(k));
+    b.setAttribute('aria-label', `${DOW[dt.getDay()]} ${MONTH[m]} ${d}${booked.has(k) ? ', already booked' : ''}`);
+    if (picked.has(k)) b.classList.add('on'); if (booked.has(k)) b.classList.add('booked');
+    b.onclick = () => { picked.has(k) ? picked.delete(k) : picked.add(k); drawCal(); paint(); };
+    g.appendChild(b);
+  }
+  C.appendChild(g);
+  const f = document.createElement('div'); f.className = 'cal-foot';
+  [[3, 'Every Wednesday'], [6, 'Every Saturday']].forEach(([dow, label]) => {
+    const c = document.createElement('button'); c.type = 'button'; c.className = 'chip'; c.textContent = label;
+    c.onclick = () => { for (let d = 1; d <= days; d++) { const dt = new Date(y, m, d); if (dt >= today && dt.getDay() === dow) picked.add(ymd(dt)); }
+      $('start').value = dow === 3 ? '19:00' : '09:30'; drawCal(); paint(); };
+    f.appendChild(c);
+  });
+  if (picked.size) { const c = document.createElement('button'); c.type = 'button'; c.className = 'chip'; c.textContent = 'Clear';
+    c.onclick = () => { picked.clear(); drawCal(); paint(); }; f.appendChild(c); }
+  const sum = document.createElement('span'); sum.className = 'cal-sum'; sum.textContent = picked.size ? `${picked.size} picked` : '';
+  f.appendChild(sum); C.appendChild(f);
+}
+['start','where'].forEach(id => $(id).addEventListener('input', paint));
 
 document.querySelectorAll('.quick .chip').forEach(b => b.addEventListener('click', () => {
   const d = new Date(); d.setHours(0,0,0,0);
   let add = (+b.dataset.dow - d.getDay() + 7) % 7; if (add === 0) add = 7; d.setDate(d.getDate() + add);
-  $('date').value = ymd(d);
+  picked.add(ymd(d)); view = new Date(d.getFullYear(), d.getMonth(), 1); drawCal();
   if (b.dataset.time) $('start').value = b.dataset.time;
   if (!$('where').value.trim() || /^(Tampa|St\. Pete)$/.test($('where').value.trim())) $('where').value = b.dataset.city;
   document.querySelectorAll('.quick .chip').forEach(x => x.setAttribute('aria-pressed', x === b));
@@ -175,6 +240,7 @@ function venues(v) {
 
 function render(r) {
   venues(r.venues);
+  booked = new Set((r.upcoming || []).filter(e => !e.cancelled).map(e => e.date)); drawCal();
   const L = $('list'); L.innerHTML = '';
   const up = (r.upcoming || []).sort((a,b) => (a.date + a.start).localeCompare(b.date + b.start));
   if (!up.length) { L.innerHTML = '<li class="empty-list">Nothing booked yet. Pick a date above.</li>'; return; }
@@ -198,7 +264,7 @@ async function call(body) {
 }
 
 let demoData = {upcoming: [{id:'1', date: ymd(new Date(Date.now()+86400000)), start:'19:00', end:'21:00', where:'Topgolf St. Pete'}], venues: ['Topgolf St. Pete']};
-function demo(b) { if (b && !b.action) demoData.upcoming.push({id: String(Math.random()), date: b.date, start: b.start, end: b.end || String((+b.start.slice(0,2)+2)%24).padStart(2,'0')+b.start.slice(2), where: b.where});
+function demo(b) { if (b && !b.action) (b.dates || [b.date]).forEach(dd => demoData.upcoming.push({id: String(Math.random()), date: dd, start: b.start, end: b.end || String((+b.start.slice(0,2)+2)%24).padStart(2,'0')+b.start.slice(2), where: b.where}));
   return Promise.resolve(Object.assign({ok: true}, demoData)); }
 
 async function cancel(e, btn) {
@@ -212,22 +278,30 @@ function msg(t, k) { $('msg').textContent = t; $('msg').className = 'msg ' + (k 
 
 $('f').addEventListener('submit', async ev => {
   ev.preventDefault();
-  const b = {date: $('date').value, start: $('start').value, end: $('end').value, where: $('where').value.trim(), note: $('note').value.trim()};
-  if (!b.date) return msg('Pick a date.', 'err'), $('date').focus();
+  const b = {dates: [...picked].sort(), start: $('start').value, end: $('end').value, where: $('where').value.trim(), note: $('note').value.trim()};
+  if (!b.dates.length) return msg('Tap at least one date on the calendar.', 'err'), $('cal').scrollIntoView({block: 'center'});
   if (!b.start) return msg('Add a start time.', 'err'), $('start').focus();
   if (!b.where) return msg('Add where it is.', 'err'), $('where').focus();
   $('go').disabled = true; $('go').textContent = 'Locking in...'; msg('');
   try {
     const r = await call(b); if (!r.ok) { if (r.error === 'bad link') return locked(); throw new Error(r.error); }
     $('bib').classList.add('locked'); render(r);
-    msg(`Locked in. It's on my calendar.`, 'ok');
+    const n = b.dates.length; picked.clear(); drawCal();
+    msg(n === 1 ? `Locked in. It's on my calendar.` : `Locked in ${n} dates. They're all on my calendar.`, 'ok');
     $('note').value = ''; $('end').value = '';
   } catch (x) { msg(x.message || 'That didn\'t go through. Try again or text John.', 'err'); }
   $('go').disabled = false; $('go').textContent = 'Lock it in';
 });
 
-function locked() { document.querySelector('main').innerHTML = '<h1>Run Club<br><span>x JohnVon</span></h1><p class="lede" style="margin-top:20px">This page is for LA. Use the link John sent you.</p>'; }
-paint();
+function locked() { document.querySelector('main').innerHTML = '<h1>Run<br>Club</h1><p class="lede" style="margin-top:20px">This page is for LA. Use the link John sent you.</p>'; }
+(function tip() {
+  const standalone = navigator.standalone || matchMedia('(display-mode: standalone)').matches;
+  let seen = false; try { seen = localStorage.getItem('jv_tip') === '1'; } catch (e) {}
+  if (standalone || seen) return;
+  $('tip').hidden = false;
+  $('tipOk').onclick = () => { $('tip').hidden = true; try { localStorage.setItem('jv_tip', '1'); } catch (e) {} };
+})();
+drawCal(); paint();
 if (live && !KEY) locked();
 else call().then(r => r.ok ? render(r) : r.error === 'bad link' ? locked() : ($('list').innerHTML = '<li class="empty-list">Could not load the schedule. Text John.</li>'))
       .catch(() => $('list').innerHTML = '<li class="empty-list">Could not load the schedule. Check your connection.</li>');
