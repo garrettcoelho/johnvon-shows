@@ -75,6 +75,9 @@ input[type=time]::-webkit-date-and-time-value{text-align:left}
 input:focus,textarea:focus,.chip:focus-visible,button:focus-visible{outline:2px solid var(--neon);outline-offset:2px}
 .venues{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
 .venues .chip{font-size:13px;padding:8px 12px;min-height:36px}
+.past{position:relative;display:flex;align-items:center;justify-content:space-between;margin-top:8px;border:1px solid var(--line);border-radius:12px;padding:12px 14px;background:var(--field);color:var(--bone);font:700 15px "Archivo",sans-serif}
+.past::after{content:"▾";color:var(--gold);font-size:16px}
+.past select{position:absolute;inset:0;width:100%;height:100%;opacity:0;font-size:16px;cursor:pointer}
 .go{width:100%;margin-top:8px;border:0;border-radius:12px;background:var(--neon);color:#fff;font:900 22px "Archivo",sans-serif;font-stretch:80%;
   letter-spacing:.02em;padding:18px;cursor:pointer;box-shadow:0 0 28px rgba(255,51,71,.45);text-transform:uppercase}
 .go:disabled{opacity:.6;cursor:wait}
@@ -230,6 +233,7 @@ html,body{overscroll-behavior-y:contain}
       <label for="where">Where</label>
       <div class="where-wrap"><input id="where" autocomplete="off" placeholder="Start typing the venue or address" required role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="sugg"><ul class="sugg" id="sugg" role="listbox" hidden></ul></div>
       <div class="venues" id="venues"></div>
+      <label class="past" id="pastWrap" hidden><span id="pastLbl">All previous venues</span><select id="past"></select></label>
     </div>
     <div class="f"><label for="note">Anything I should know? <span class="hint">(optional)</span></label>
       <textarea id="note" placeholder="Theme, parking, set length..."></textarea></div>
@@ -253,7 +257,7 @@ html,body{overscroll-behavior-y:contain}
 </main>
 <script>
 const CFG = {"booker": "LA, Jeff and Rusty", "eventName": "Run Club For MFs That Don't Run", "cities": ["St. Pete", "Tampa"], "every": [[3, "Every Wednesday", "19:00"], [6, "Every Saturday", "09:30"]], "defaultStart": "19:00", "headline": "Run Club", "mapsKey": "AIzaSyAJctUkAJCvC9fkdmvcJZA-vRRsoCzuCVc", "bias": [27.85, -82.6], "kitRef": "la", "team": ["LA", "Jeff", "Rusty"]};   // this client's settings (filled in by booking/build.py)
-const VERSION = '20261123-161926';   // bump on every publish; an old cached copy sees the new number and reloads itself
+const VERSION = '20261123-162844';   // bump on every publish; an old cached copy sees the new number and reloads itself
 const fresh = () => {   // show the signing screen, then load a fresh copy (never the cached one)
   try { sessionStorage.setItem('jv_reload', '1'); } catch (e) {}
   const R = document.getElementById('reload'); R.classList.remove('out'); R.hidden = false;
@@ -464,10 +468,18 @@ if (CFG.kitRef && KEY) {
   };
 }
 
+// Places they've booked before (newest first): the 3 latest as buttons, every one in the dropdown.
 function venues(v) {
+  v = v || []; const short = w => w.split(',')[0].trim() || w;
+  const pick = w => { $('where').value = w; paint(); $('past').value = ''; };
   $('venues').innerHTML = '';
-  (v || []).forEach(name => { const c = document.createElement('button'); c.type = 'button'; c.className = 'chip'; c.textContent = name;
-    c.onclick = () => { $('where').value = name; paint(); }; $('venues').appendChild(c); });
+  v.slice(0, 3).forEach(w => { const c = document.createElement('button'); c.type = 'button'; c.className = 'chip'; c.textContent = short(w);
+    c.onclick = () => pick(w); $('venues').appendChild(c); });
+  $('pastWrap').hidden = v.length < 2;
+  $('pastLbl').textContent = `All previous venues (${v.length})`;
+  $('past').innerHTML = '<option value="">Pick a venue</option>';
+  v.forEach(w => { const o = document.createElement('option'); o.value = w; o.textContent = w; $('past').appendChild(o); });
+  $('past').onchange = () => { if ($('past').value) pick($('past').value); };
 }
 
 function render(r) {
