@@ -142,12 +142,12 @@ html,body{overscroll-behavior-y:contain}
 </style>
 </head>
 <body>
-<div id="ptr" aria-hidden="true"><img src="runclub-badge-180.webp" alt=""></div>
-<div id="reload" role="status" aria-label="Refreshing" hidden><div class="run"><div class="lines" aria-hidden="true"><i></i><i></i><i></i></div><img src="runclub-runner.jpg" alt=""></div></div>
+<div id="ptr" aria-hidden="true"><img src="badge-180.webp" alt=""></div>
+<div id="reload" role="status" aria-label="Refreshing" hidden><div class="run"><div class="lines" aria-hidden="true"><i></i><i></i><i></i></div><img src="runner.jpg" alt=""></div></div>
 <script>try { if (sessionStorage.getItem('jv_reload')) { document.getElementById('reload').hidden = false; } } catch (e) {}</script>
 <main>
   <header class="hero">
-    <img class="badge" src="runclub-badge.webp" alt="">
+    <img class="badge" src="badge.webp" alt="">
     <h1>Run Club<span class="mf">For MFs That Don't Run</span></h1>
     <div class="with"><span class="times" aria-hidden="true">&times;</span><img class="sig" src="johnvon-logo-red.png" alt="JohnVon"></div>
   </header>
@@ -193,7 +193,8 @@ html,body{overscroll-behavior-y:contain}
   <footer>Gold dots on the calendar are dates I'm already booked.</footer>
 </main>
 <script>
-const VERSION = '2026-11-23n';   // bump on every publish; an old cached copy sees the new number and reloads itself
+const CFG = {"booker": "LA", "eventName": "Run Club For MFs That Don't Run", "cities": ["St. Pete", "Tampa"], "every": [[3, "Every Wednesday", "19:00"], [6, "Every Saturday", "09:30"]], "defaultStart": "19:00", "headline": "Run Club"};   // this client's settings (filled in by booking/build.py)
+const VERSION = '20261123-144535';   // bump on every publish; an old cached copy sees the new number and reloads itself
 const fresh = () => {   // show the signing screen, then load a fresh copy (never the cached one)
   try { sessionStorage.setItem('jv_reload', '1'); } catch (e) {}
   const R = document.getElementById('reload'); R.classList.remove('out'); R.hidden = false;
@@ -224,7 +225,7 @@ setTimeout(reloadDone, 9000);   // never leave it up if Google is slow to answer
 fetch(location.pathname + '?check=' + Date.now(), {cache: 'no-store'}).then(r => r.text())   // auto-update an old cached copy
   .then(t => { const m = t.match(/const VERSION = '([^']+)'/); if (m && m[1] !== VERSION) fresh(); }).catch(() => {});
 const API = 'https://script.google.com/macros/s/AKfycbxv0d2CoaQJnfbWkXmuHNWUOcRiWbtCDvTizeGInfd4o2BS832bNYwIaJrljqCiLFlZKQ/exec';   // Google Apps Script web app (john@itsjohnvon.com)
-// LA's key lives only in his link (after the #). It is never in this file or sent to the website.
+// The booker's key lives only in their link (after the #). It is never in this file or sent to the website.
 const KEY = (() => { const m = location.hash.match(/k=([\w-]+)/); let k = m ? m[1] : '';
   try { if (k) localStorage.setItem('jv_k', k); else k = localStorage.getItem('jv_k') || ''; } catch (e) {} return k; })();
 if (KEY && !/k=/.test(location.hash)) history.replaceState(null, '', location.pathname + '#k=' + KEY);   // so Add to Home Screen keeps the key
@@ -247,7 +248,7 @@ function paint() {
   $('bWhere').textContent = w || 'Pick a date and a spot';
   $('bTime').textContent = t12(st) || 'TBD';
   const nice = d => `${MON[parse(d).getMonth()]} ${parse(d).getDate()}`;
-  $('bDay').textContent = !ds.length ? "Run Club For MFs That Don't Run"
+  $('bDay').textContent = !ds.length ? CFG.eventName
     : ds.length === 1 ? `${DOW[parse(ds[0]).getDay()]}, ${nice(ds[0])}`
     : `${ds.length} dates: ${ds.slice(0, 4).map(nice).join(', ')}${ds.length > 4 ? ', more' : ''}`;
   $('bib').classList.remove('locked');
@@ -277,10 +278,10 @@ function drawCal() {
   }
   C.appendChild(g);
   const f = document.createElement('div'); f.className = 'cal-foot';
-  if (!editing) [[3, 'Every Wednesday'], [6, 'Every Saturday']].forEach(([dow, label]) => {
+  if (!editing) CFG.every.forEach(([dow, label, time]) => {
     const c = document.createElement('button'); c.type = 'button'; c.className = 'chip'; c.textContent = label;
     c.onclick = () => { quickOff(); for (let d = 1; d <= days; d++) { const dt = new Date(y, m, d); if (dt >= today && dt.getDay() === dow) picked.add(ymd(dt)); }
-      $('start').value = dow === 3 ? '19:00' : '09:30'; drawCal(); paint(); };
+      if (time) $('start').value = time; drawCal(); paint(); };
     f.appendChild(c);
   });
   if (picked.size) { const c = document.createElement('button'); c.type = 'button'; c.className = 'chip'; c.textContent = 'Clear';
@@ -294,7 +295,7 @@ function drawCal() {
 // tapping it again clears it; picking dates on the calendar by hand turns it off.
 const quickOff = () => document.querySelectorAll('.quick .chip').forEach(x => x.setAttribute('aria-pressed', 'false'));
 document.querySelectorAll('.quick .chip').forEach(b => b.addEventListener('click', () => {
-  const isCity = () => !$('where').value.trim() || /^(Tampa|St\. Pete)$/.test($('where').value.trim());
+  const isCity = () => !$('where').value.trim() || CFG.cities.includes($('where').value.trim());
   if (b.getAttribute('aria-pressed') === 'true') {   // tapped again: undo it
     quickOff(); picked.clear(); if (isCity()) $('where').value = ''; drawCal(); paint(); return;
   }
@@ -344,7 +345,7 @@ async function call(body) {
   return r.json();
 }
 
-let demoData = {upcoming: [{id:'1', date: ymd(new Date(Date.now()+86400000)), start:'19:00', end:'21:00', where:'Topgolf St. Pete', status:'confirmed'}, {id:'2', date:'2026-12-02', start:'19:00', end:'21:00', where:'Tampa', status:'pending'}, {id:'3', date:'2026-12-05', start:'09:30', end:'11:30', where:'St. Pete', status:'declined'}], venues: ['Topgolf St. Pete']};
+let demoData = {upcoming: [{id:'1', date: ymd(new Date(Date.now()+86400000)), start: CFG.defaultStart, end:'21:00', where: CFG.cities[0] || 'Venue', status:'confirmed'}], venues: CFG.cities};
 function demo(b) { if (b && b.action === 'edit') { const x = demoData.upcoming.find(u => u.id === b.id); Object.assign(x, {date: b.date, start: b.start, end: b.end || x.end, where: b.where}); }
   if (b && !b.action) (b.dates || [b.date]).forEach(dd => demoData.upcoming.push({id: String(Math.random()), date: dd, start: b.start, end: b.end || String((+b.start.slice(0,2)+2)%24).padStart(2,'0')+b.start.slice(2), where: b.where}));
   return Promise.resolve(Object.assign({ok: true}, demoData)); }
@@ -395,7 +396,7 @@ $('f').addEventListener('submit', async ev => {
   $('go').disabled = false; $('go').textContent = 'Lock it in';
 });
 
-function locked() { document.querySelector('main').innerHTML = '<h1>Run<br>Club</h1><p class="lede" style="margin-top:20px">This page is for LA. Use the link John sent you.</p>'; }
+function locked() { document.querySelector('main').innerHTML = '<h1>' + CFG.headline + '</h1><p class="lede" style="margin-top:20px">This page is for ' + CFG.booker + '. Use the link John sent you.</p>'; }
 (function tip() {
   const standalone = navigator.standalone || matchMedia('(display-mode: standalone)').matches;
   let seen = false; try { seen = localStorage.getItem('jv_tip') === '1'; } catch (e) {}
