@@ -21,7 +21,7 @@ html,body{overflow-x:hidden;max-width:100%}
 button{touch-action:manipulation;-webkit-tap-highlight-color:transparent}
 html{background:var(--bg)}
 body{background:radial-gradient(120% 60% at 50% -10%,#2a0710 0%,var(--bg) 60%);color:var(--bone);font-family:"Archivo",system-ui,sans-serif;
-  min-height:100vh;padding:28px 16px 64px;-webkit-font-smoothing:antialiased}
+  min-height:100vh;padding:calc(env(safe-area-inset-top,0px) + 44px) 16px 64px;-webkit-font-smoothing:antialiased}
 main{max-width:460px;margin:0 auto}
 /* collab poster header: their name in varsity type, John's signature written across it */
 .hero{position:relative;text-align:center;padding:0 0 6px}
@@ -160,7 +160,7 @@ html,body{overscroll-behavior-y:contain}
 #welcome .ok{background:var(--neon);color:#fff}
 #welcome .later{background:none;color:var(--smoke);margin-top:6px}
 /* refer a venue: send John's booking kit */
-.refer{margin-top:44px;border:1px dashed var(--gold);border-radius:16px;padding:18px;text-align:center}
+.refer{margin:28px 0 30px;border:1px dashed var(--gold);border-radius:16px;padding:18px;text-align:center}
 .refer h3{font:900 24px/1.05 "Archivo",sans-serif;font-stretch:82%;text-transform:uppercase;color:#fff;margin:0 0 6px}
 .refer p{color:var(--smoke);font-size:15px;line-height:1.45;margin:0 0 14px}
 .go2{width:100%;border:0;border-radius:12px;background:var(--gold);color:#14050A;font:900 18px "Archivo",sans-serif;padding:15px;cursor:pointer}
@@ -198,7 +198,7 @@ html,body{overscroll-behavior-y:contain}
   <p class="lede">Put me on the schedule. It goes straight onto my calendar, and you'll see it here when I confirm.</p>
   <div class="tip" id="tip" hidden><span>Keep this as an app: tap <b>Share</b>, then <b>Add to Home Screen</b>.</span><button type="button" id="tipOk">Got it</button></div>
 
-  <div class="bib" id="bib" aria-live="polite">
+  <div class="bib" id="bib" hidden>
     <i class="pin a"></i><i class="pin b"></i><i class="pin c"></i><i class="pin d"></i>
     <div class="bib-top"><span>RUN CLUB FOR MFs</span><span>DJ JOHNVON</span></div>
     <div class="bib-num empty" id="bNum">0000</div>
@@ -206,6 +206,12 @@ html,body{overscroll-behavior-y:contain}
     <p class="bib-foot" id="bDay">Run Club For MFs That Don't Run</p>
     <div class="stamp">BOOKED</div>
   </div>
+
+  <section class="refer" id="referBox" hidden>
+    <h3>Know a spot that needs a DJ?</h3>
+    <p>Send them John's booking kit. They see his mixes, photos and the places he's played, and they get a referral rate for the first month because it came from you.</p>
+    <button type="button" class="go2" id="referBtn">Send John's kit to a venue</button>
+  </section>
 
   <form id="f" novalidate>
     <div class="editing" id="editing" hidden><span id="editTxt"></span><button type="button" id="editStop">Never mind</button></div>
@@ -234,11 +240,6 @@ html,body{overscroll-behavior-y:contain}
   <h2>On the schedule</h2>
   <ul class="list" id="list"><li class="empty-list">Loading...</li></ul>
 
-  <section class="refer" id="referBox" hidden>
-    <h3>Know a spot that needs a DJ?</h3>
-    <p>Send them John's booking kit. They see his mixes, photos and the places he's played, and they get a referral rate for the first month because it came from you.</p>
-    <button type="button" class="go2" id="referBtn">Send John's kit to a venue</button>
-  </section>
   <div id="sendSheet" role="dialog" aria-modal="true" aria-labelledby="sTitle" hidden><div class="sheet">
     <h3 id="sTitle">Send John's kit</h3>
     <div class="f" id="kFromWrap" hidden><label>Who's sending it?</label><div class="me-chips" id="kFrom"></div></div>
@@ -252,7 +253,7 @@ html,body{overscroll-behavior-y:contain}
 </main>
 <script>
 const CFG = {"booker": "LA, Jeff and Rusty", "eventName": "Run Club For MFs That Don't Run", "cities": ["St. Pete", "Tampa"], "every": [[3, "Every Wednesday", "19:00"], [6, "Every Saturday", "09:30"]], "defaultStart": "19:00", "headline": "Run Club", "mapsKey": "AIzaSyAJctUkAJCvC9fkdmvcJZA-vRRsoCzuCVc", "bias": [27.85, -82.6], "kitRef": "la", "team": ["LA", "Jeff", "Rusty"]};   // this client's settings (filled in by booking/build.py)
-const VERSION = '20261123-155508';   // bump on every publish; an old cached copy sees the new number and reloads itself
+const VERSION = '20261123-161926';   // bump on every publish; an old cached copy sees the new number and reloads itself
 const fresh = () => {   // show the signing screen, then load a fresh copy (never the cached one)
   try { sessionStorage.setItem('jv_reload', '1'); } catch (e) {}
   const R = document.getElementById('reload'); R.classList.remove('out'); R.hidden = false;
@@ -298,6 +299,20 @@ const ymd = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-$
 const parse = s => { const [y,m,d] = s.split('-').map(Number); return new Date(y, m-1, d); };
 const t12 = s => { if (!s) return ''; let [h,m] = s.split(':').map(Number); const ap = h >= 12 ? 'PM' : 'AM'; h = h % 12 || 12; return `${h}:${String(m).padStart(2,'0')} ${ap}`; };
 const live = API.startsWith('https://');
+// Preview copy (not shows.itsjohnvon.com): show a PREVIEW tag and never save or track anything.
+const PREVIEW = location.hostname !== 'shows.itsjohnvon.com';
+if (PREVIEW && window.top === window) {
+  const HOME = location.pathname.startsWith('/preview/') ? '/preview/#home' : '';
+  if (!HOME) { const t = document.createElement('div'); t.textContent = 'PREVIEW, not live';
+    t.style.cssText = 'position:fixed;top:calc(8px + env(safe-area-inset-top,0px));left:50%;transform:translateX(-50%);z-index:999;background:#FFD400;color:#000;font:800 12px/1 Archivo,sans-serif;letter-spacing:.08em;padding:9px 14px;border-radius:999px;pointer-events:none';
+    document.body.appendChild(t); }
+  else { const bar = document.createElement('div'), pill = 'background:#FFD400;color:#000;font:800 12px/1 Archivo,sans-serif;letter-spacing:.08em;padding:10px 14px;border-radius:999px;text-decoration:none;white-space:nowrap;border:0;box-shadow:0 2px 12px rgba(0,0,0,.55);cursor:pointer';
+  bar.style.cssText = 'position:fixed;bottom:calc(14px + env(safe-area-inset-bottom,0px));left:50%;transform:translateX(-50%);z-index:999;display:flex;gap:6px';
+  const r = document.createElement('button'); r.type = 'button'; r.textContent = '↻ Reload'; r.style.cssText = pill;
+  r.onclick = () => { r.textContent = '↻ ...'; const u = new URL(location.href); u.searchParams.set('v', Date.now()); location.replace(u.href); };
+  const h = document.createElement('a'); h.href = HOME; h.textContent = 'PREVIEW · Home'; h.style.cssText = pill;
+  bar.append(r, h); document.body.appendChild(bar); } }
+
 
 function paint() {
   const ds = [...picked].sort(), w = $('where').value.trim(), st = $('start').value;
@@ -440,7 +455,7 @@ if (CFG.kitRef && KEY) {
     if (TEAM.length > 1 && !me) { $('kMsg').textContent = "Tap your name first."; $('kMsg').className = 'msg err'; return; }
     kid = (me ? slug(me) + '-' : '') + slug(v).slice(0, 10) + '-' + kid.split('-').pop();
     const link = kitLink(), text = kitText();
-    try { if (live) await fetch(API, {method: 'POST', body: JSON.stringify({k: KEY, action: 'kit_sent', id: kid, venue: v, to: $('kTo').value.trim()})}); } catch (e) {}
+    try { if (live && !PREVIEW) await fetch(API, {method: 'POST', body: JSON.stringify({k: KEY, action: 'kit_sent', id: kid, venue: v, to: $('kTo').value.trim()})}); } catch (e) {}
     try {
       if (navigator.share) await navigator.share({text: text + ' ' + link});
       else { await navigator.clipboard.writeText(text + ' ' + link); $('kMsg').textContent = 'Copied. Paste it in a text to them.'; $('kMsg').className = 'msg ok'; return; }
@@ -481,6 +496,7 @@ function render(r) {
 
 async function call(body) {
   if (!live) return demo(body);
+  if (body && PREVIEW) return {ok: false, error: 'Preview only. Nothing was saved.'};
   const r = body ? await fetch(API, {method: 'POST', body: JSON.stringify(Object.assign({k: KEY}, me ? {by: me} : {}, body))})
                  : await fetch(`${API}?k=${encodeURIComponent(KEY)}`);
   return r.json();

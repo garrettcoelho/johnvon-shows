@@ -130,6 +130,20 @@ footer{margin-top:48px;color:var(--smoke);font-size:13px;text-align:center}
 const KIT = {"name": "JohnVon", "tagline": "Tampa Bay house DJ", "sound": "Minimal, tech and deep house. Groovy day-party energy that carries into the late night.", "bio": "JohnVon is a Tampa Bay DJ who reads the room and keeps it moving. From run clubs and pool parties to packed St. Pete nights, he plays house music people actually dance to.", "venues": ["The Estate", "Tryst", "Red Thread", "Copper Shaker", "Hollander Hotel", "SkyBeach Resort", "Hotel Alba", "Soundlab", "Boohoff Foundation event", "Run Club For MFs That Don't Run"], "collectives": ["Phat Basslines", "Rotating Frequencies", "House Hats Collective"], "photos": ["photo-1.jpg", "photo-2.jpg", "photo-3.jpg", "photo-4.jpg"], "mixes": ["https://soundcloud.com/user-503165579/vons-mini-mix-4", "https://soundcloud.com/user-503165579/vons-mini-mix-2-1"], "email": "john@itsjohnvon.com", "instagram": "john.vondutch", "tiktok": "johnvonhq", "rates": {"normal_hour": 200, "normal_min": 400, "ref_hour": 100, "ref_min": 200, "ref_period": "first month"}, "referrers": {"la": {"name": "Run Club", "org": "Run Club For MFs That Don't Run", "team": ["LA", "Jeff", "Rusty"]}}};
 const API = 'https://script.google.com/macros/s/AKfycbxv0d2CoaQJnfbWkXmuHNWUOcRiWbtCDvTizeGInfd4o2BS832bNYwIaJrljqCiLFlZKQ/exec';
 const MAPS_KEY = 'AIzaSyAJctUkAJCvC9fkdmvcJZA-vRRsoCzuCVc';
+// Preview copy (not shows.itsjohnvon.com): show a PREVIEW tag and never save or track anything.
+const PREVIEW = location.hostname !== 'shows.itsjohnvon.com';
+if (PREVIEW && window.top === window) {
+  const HOME = location.pathname.startsWith('/preview/') ? '/preview/#home' : '';
+  if (!HOME) { const t = document.createElement('div'); t.textContent = 'PREVIEW, not live';
+    t.style.cssText = 'position:fixed;top:calc(8px + env(safe-area-inset-top,0px));left:50%;transform:translateX(-50%);z-index:999;background:#FFD400;color:#000;font:800 12px/1 Archivo,sans-serif;letter-spacing:.08em;padding:9px 14px;border-radius:999px;pointer-events:none';
+    document.body.appendChild(t); }
+  else { const bar = document.createElement('div'), pill = 'background:#FFD400;color:#000;font:800 12px/1 Archivo,sans-serif;letter-spacing:.08em;padding:10px 14px;border-radius:999px;text-decoration:none;white-space:nowrap;border:0;box-shadow:0 2px 12px rgba(0,0,0,.55);cursor:pointer';
+  bar.style.cssText = 'position:fixed;bottom:calc(14px + env(safe-area-inset-bottom,0px));left:50%;transform:translateX(-50%);z-index:999;display:flex;gap:6px';
+  const r = document.createElement('button'); r.type = 'button'; r.textContent = '↻ Reload'; r.style.cssText = pill;
+  r.onclick = () => { r.textContent = '↻ ...'; const u = new URL(location.href); u.searchParams.set('v', Date.now()); location.replace(u.href); };
+  const h = document.createElement('a'); h.href = HOME; h.textContent = 'PREVIEW · Home'; h.style.cssText = pill;
+  bar.append(r, h); document.body.appendChild(bar); } }
+
 const $ = id => document.getElementById(id);
 const P = new URLSearchParams(location.hash.slice(1));
 const venueName = (P.get('v') || '').slice(0, 80), toName = (P.get('to') || '').slice(0, 40), refKey = P.get('r') || '', sendId = (P.get('id') || '').slice(0, 24);
@@ -170,7 +184,7 @@ if (ref) {
 if (venueName) $('where').value = venueName;
 
 // tell John once that this venue opened the kit
-if (sendId && API) { try { if (!localStorage.getItem('kv_' + sendId)) { localStorage.setItem('kv_' + sendId, '1');
+if (sendId && API && !PREVIEW) { try { if (!localStorage.getItem('kv_' + sendId)) { localStorage.setItem('kv_' + sendId, '1');
   fetch(API, {method: 'POST', body: JSON.stringify({action: 'kit_view', id: sendId, venue: venueName, to: toName, ref: refKey})}).catch(() => {}); } } catch (e) {} }
 
 // Google address search (same key as the booking pages)
@@ -203,6 +217,7 @@ $('f').addEventListener('submit', async ev => {
   if (!b.where) return msg('Add the venue or address.', 'err');
   if (!b.who) return msg('Add your name.', 'err');
   if (!b.phone && !b.email) return msg('Add a phone or email so John can reach you.', 'err');
+  if (PREVIEW) return msg('Preview only. Nothing was sent.', 'err');
   $('go').disabled = true; $('go').textContent = 'Sending...'; msg('');
   try { const r = await fetch(API, {method: 'POST', body: JSON.stringify(b)}).then(r => r.json()); if (!r.ok) throw new Error(r.error);
     $('f').hidden = true; $('done').hidden = false; $('done').scrollIntoView({behavior: 'smooth', block: 'center'});
