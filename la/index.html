@@ -145,11 +145,31 @@ html,body{overscroll-behavior-y:contain}
 .sugg li span{display:block;font-size:13px;color:var(--smoke);margin-top:2px}
 .sugg li[aria-selected="true"],.sugg li:hover{background:#2a1418}
 .sugg .by{padding:4px 12px 2px;font-size:11px;color:var(--smoke);cursor:default;background:none!important;text-align:right}
+/* first-open welcome: add to home screen */
+#welcome{position:fixed;inset:0;z-index:90;display:flex;align-items:flex-end;justify-content:center;background:rgba(0,0,0,.72);padding:16px}
+#welcome .sheet{width:100%;max-width:460px;background:#160b0e;border:1px solid var(--line);border-radius:20px;padding:22px 20px calc(18px + env(safe-area-inset-bottom,0px));box-shadow:0 -10px 40px rgba(0,0,0,.6)}
+#welcome h3{font:900 24px/1.1 "Archivo",sans-serif;font-stretch:85%;margin:0 0 6px;color:#fff}
+#welcome p{color:var(--smoke);font-size:15px;line-height:1.45;margin:0 0 14px}
+#welcome ol{margin:0 0 18px;padding:0;list-style:none;counter-reset:s}
+#welcome li{counter-increment:s;display:flex;gap:12px;align-items:center;padding:10px 0;border-top:1px solid var(--line);font-size:16px;font-weight:600;color:var(--bone)}
+#welcome li::before{content:counter(s);flex:none;width:28px;height:28px;border-radius:50%;background:var(--neon);color:#fff;display:grid;place-items:center;font:800 14px "Archivo",sans-serif}
+#welcome li svg{flex:none;width:22px;height:22px;vertical-align:middle}
+#welcome .ico{display:inline-flex;align-items:center;gap:6px}
+#welcome button{width:100%;border:0;border-radius:12px;padding:15px;font:800 17px "Archivo",sans-serif;cursor:pointer}
+#welcome .ok{background:var(--neon);color:#fff}
+#welcome .later{background:none;color:var(--smoke);margin-top:6px}
 @media (max-width:480px){.row{grid-template-columns:1fr;gap:0}}
 @media (prefers-reduced-motion:reduce){.bib.locked .stamp{animation:none;opacity:1;transform:rotate(-14deg)}}
 </style>
 </head>
 <body>
+<div id="welcome" role="dialog" aria-modal="true" aria-labelledby="wTitle" hidden><div class="sheet">
+  <h3 id="wTitle">Hey LA! Save this as an app</h3>
+  <p id="wLede">One time only. After this it's an icon on your home screen that opens straight to your page, already unlocked.</p>
+  <ol id="wSteps"></ol>
+  <button type="button" class="ok" id="wDone">Done, it's on my home screen</button>
+  <button type="button" class="later" id="wLater">Remind me next time</button>
+</div></div>
 <div id="ptr" aria-hidden="true"><img src="badge-180.webp" alt=""></div>
 <div id="reload" role="status" aria-label="Refreshing" hidden><div class="run"><div class="lines" aria-hidden="true"><i></i><i></i><i></i></div><img src="runner.jpg" alt=""></div></div>
 <script>try { if (sessionStorage.getItem('jv_reload')) { document.getElementById('reload').hidden = false; } } catch (e) {}</script>
@@ -202,7 +222,7 @@ html,body{overscroll-behavior-y:contain}
 </main>
 <script>
 const CFG = {"booker": "LA", "eventName": "Run Club For MFs That Don't Run", "cities": ["St. Pete", "Tampa"], "every": [[3, "Every Wednesday", "19:00"], [6, "Every Saturday", "09:30"]], "defaultStart": "19:00", "headline": "Run Club", "mapsKey": "AIzaSyAJctUkAJCvC9fkdmvcJZA-vRRsoCzuCVc", "bias": [27.85, -82.6]};   // this client's settings (filled in by booking/build.py)
-const VERSION = '20261123-150750';   // bump on every publish; an old cached copy sees the new number and reloads itself
+const VERSION = '20261123-151150';   // bump on every publish; an old cached copy sees the new number and reloads itself
 const fresh = () => {   // show the signing screen, then load a fresh copy (never the cached one)
   try { sessionStorage.setItem('jv_reload', '1'); } catch (e) {}
   const R = document.getElementById('reload'); R.classList.remove('out'); R.hidden = false;
@@ -450,7 +470,27 @@ $('f').addEventListener('submit', async ev => {
 });
 
 function locked() { document.querySelector('main').innerHTML = '<h1>' + CFG.headline + '</h1><p class="lede" style="margin-top:20px">This page is for ' + CFG.booker + '. Use the link John sent you.</p>'; }
+(function welcome() {   // first open: walk the booker through Add to Home Screen (iPhone Safari / other browsers)
+  const standalone = navigator.standalone || matchMedia('(display-mode: standalone)').matches;
+  let done = false; try { done = localStorage.getItem('jv_home') === '1'; } catch (e) {}
+  if (standalone || done || !KEY) return;
+  const ua = navigator.userAgent, ios = /iPhone|iPad|iPod/.test(ua), inApp = /Instagram|FBAN|FBAV|Line\/|Snapchat|TikTok/i.test(ua);
+  const notSafari = ios && /CriOS|FxiOS|EdgiOS/.test(ua);
+  const share = '<svg viewBox="0 0 24 24" fill="none" stroke="#4da3ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="m7 8 5-5 5 5"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg>';
+  const plus = '<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="4"/><path d="M12 8v8M8 12h8"/></svg>';
+  let steps;
+  if (inApp) steps = ['Tap the <b>⋯</b> menu at the top', 'Choose <b>Open in Safari</b> (or Open in browser)', 'Then follow the 3 steps that show up there'];
+  else if (ios && !notSafari) steps = [`Tap the <span class="ico">${share} <b>Share</b></span> button (bottom of the screen; if you don't see it, tap the ⋯ first)`,
+                                       `Scroll down and tap <span class="ico">${plus} <b>Add to Home Screen</b></span>`, 'Tap <b>Add</b> (top right)'];
+  else if (ios) steps = [`Tap the <span class="ico">${share} <b>Share</b></span> button`, `Tap <span class="ico">${plus} <b>Add to Home Screen</b></span>`, 'Tap <b>Add</b>'];
+  else steps = ['Tap the <b>⋮</b> menu (top right)', 'Tap <b>Add to Home screen</b> or <b>Install app</b>', 'Tap <b>Add</b>'];
+  $('wSteps').innerHTML = steps.map(x => `<li><span>${x}</span></li>`).join('');
+  $('welcome').hidden = false;
+  const close = keep => { $('welcome').hidden = true; if (keep) try { localStorage.setItem('jv_home', '1'); localStorage.setItem('jv_tip', '1'); } catch (e) {} };
+  $('wDone').onclick = () => close(true); $('wLater').onclick = () => close(false);
+})();
 (function tip() {
+  if (!$('welcome').hidden) return;   // the welcome sheet already covers this
   const standalone = navigator.standalone || matchMedia('(display-mode: standalone)').matches;
   let seen = false; try { seen = localStorage.getItem('jv_tip') === '1'; } catch (e) {}
   if (standalone || seen) return;
