@@ -11,16 +11,6 @@
  "calendar_google": "https://calendar.google.com/calendar/u/0/r?cid=c_22e38e91ffeb92c64919a3cc9dd5956402372a1a78c68cbe904c89fd1a67bdb3@group.calendar.google.com",
  "shows": [
   {
-   "id": "2026-11-25-blackout-wednesday-copper-shaker",
-   "name": "Blackout Wednesday",
-   "date": "2026-11-25",
-   "time": "8 PM to 12 AM",
-   "venue": "Copper Shaker",
-   "address": "169 1st Ave N, St. Petersburg, FL",
-   "map": "https://maps.google.com/?q=169+1st+Ave+N+St+Petersburg+FL",
-   "note": "JohnVon on the decks at Copper Shaker, then next door at The Estate."
-  },
-  {
    "id": "2026-11-25-blackout-wednesday-estate",
    "name": "Blackout Wednesday",
    "date": "2026-11-25",
@@ -28,7 +18,19 @@
    "venue": "The Estate",
    "address": "179 1st Ave N, St. Petersburg, FL",
    "map": "https://maps.google.com/?q=179+1st+Ave+N+St+Petersburg+FL",
-   "note": "Late set at The Estate."
+   "note": "Late set at The Estate.",
+   "source": "connecteam"
+  },
+  {
+   "id": "2026-11-25-blackout-wednesday-copper-shaker",
+   "name": "Blackout Wednesday",
+   "date": "2026-11-25",
+   "time": "8 PM to 12 AM",
+   "venue": "Copper Shaker",
+   "address": "169 1st Ave N, St. Petersburg, FL",
+   "map": "https://maps.google.com/?q=169+1st+Ave+N+St+Petersburg+FL",
+   "note": "JohnVon on the decks at Copper Shaker, then next door at The Estate.",
+   "source": "connecteam"
   },
   {
    "id": "2026-11-28-copper-shaker",
@@ -38,7 +40,8 @@
    "venue": "Copper Shaker",
    "address": "169 1st Ave N, St. Petersburg, FL",
    "map": "https://maps.google.com/?q=169+1st+Ave+N+St+Petersburg+FL",
-   "note": "JohnVon on the decks."
+   "note": "JohnVon on the decks.",
+   "source": "connecteam"
   }
  ],
  "guestlist": {
