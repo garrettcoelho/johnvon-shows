@@ -61,6 +61,7 @@ input:focus,textarea:focus,button:focus-visible,a:focus-visible{outline:2px soli
 .go:disabled{opacity:.6}
 .msg{min-height:22px;margin-top:12px;font-weight:600;font-size:15px;text-align:center}
 .msg.err{color:var(--neon)}.msg.ok{color:var(--gold)}
+.date-note{font-weight:400;font-size:.85em;margin-left:.4em;color:var(--smoke)}.date-note.open{color:var(--gold)}.date-note.booked{color:var(--neon)}
 .done{border:1px solid var(--gold);border-radius:16px;padding:20px;text-align:center}
 .done b{display:block;font:900 24px "Archivo",sans-serif;font-stretch:85%;color:#fff;margin-bottom:6px}
 .links{display:grid;gap:8px}
@@ -103,7 +104,7 @@ footer{margin-top:48px;color:var(--smoke);font-size:13px;text-align:center}
   <h2 id="bookTitle">Book a date</h2>
   <form id="f" novalidate>
     <div class="row">
-      <div class="f"><label for="date">Date</label><input type="date" id="date" required></div>
+      <div class="f"><label for="date">Date <span class="date-note" id="dateNote" aria-live="polite"></span></label><input type="date" id="date" required></div>
       <div class="f"><label for="hours">Hours <span class="hint">(how long)</span></label><input type="number" id="hours" min="1" max="12" step="1" value="2" inputmode="numeric"></div>
     </div>
     <div class="row">
@@ -227,6 +228,19 @@ $('f').addEventListener('submit', async ev => {
     $('f').hidden = true; $('done').hidden = false; $('done').scrollIntoView({behavior: 'smooth', block: 'center'});
   } catch (e) { msg(e.message || "That didn't go through. Email " + KIT.email, 'err'); }
   $('go').disabled = false; $('go').textContent = 'Request this date';
+});
+// Open-or-booked check on the date box (John 2026-11-24): reads John's calendars, busy times only, never details
+function freeFetch(dates, tries = 1) {
+  const c = new AbortController(), t = setTimeout(() => c.abort(), 10000);
+  return fetch(API, {method: 'POST', body: JSON.stringify({action: 'free', dates}), signal: c.signal}).then(r => r.json())
+    .then(r => { clearTimeout(t); if (!r.ok) throw new Error('no'); return r.days; }, e => { clearTimeout(t); if (tries > 0) return freeFetch(dates, tries - 1); throw e; });
+}
+$('date').addEventListener('change', () => {
+  const d = $('date').value, n = $('dateNote'); if (!d) { n.textContent = ''; return; }
+  n.textContent = 'Checking...'; n.className = 'date-note';
+  freeFetch([d]).then(days => { if ($('date').value !== d) return; const o = days[d] && days[d].open;
+    n.textContent = o ? 'Open' : "John's booked that night. Send it anyway if it's a daytime event."; n.className = 'date-note ' + (o ? 'open' : 'booked'); })
+    .catch(() => { n.textContent = ''; });
 });
 </script>
 </body>

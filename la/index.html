@@ -257,7 +257,7 @@ html,body{overscroll-behavior-y:contain}
 </main>
 <script>
 const CFG = {"booker": "LA, Jeff and Rusty", "eventName": "Run Club For MFs That Don't Run", "cities": ["St. Pete", "Tampa"], "every": [[3, "Every Wednesday", "19:00"], [6, "Every Saturday", "09:30"]], "defaultStart": "19:00", "headline": "Run Club", "mapsKey": "AIzaSyAJctUkAJCvC9fkdmvcJZA-vRRsoCzuCVc", "bias": [27.85, -82.6], "kitRef": "la", "team": ["LA", "Jeff", "Rusty"], "knownVenues": ["Topgolf St. Pete, 220 Carillon Pkwy, St. Petersburg, FL 33716", "The Patio Tampa, 421 S MacDill Ave, Tampa, FL 33609", "Benchmark International Arena, 401 Channelside Dr, Tampa, FL 33602", "DICK'S House of Sport (International Plaza), 2223 N Westshore Blvd, Tampa, FL 33607", "Oxford Exchange, 420 W Kennedy Blvd, Tampa, FL 33606", "SouthBar Tampa, 3703 Henderson Blvd, Tampa, FL 33609", "1920 Ybor, 1920 E 7th Ave, Tampa, FL 33605", "Yard House, 450 Channelside Dr, Tampa, FL 33602"]};   // this client's settings (filled in by booking/build.py)
-const VERSION = '20261123-163939';   // bump on every publish; an old cached copy sees the new number and reloads itself
+const VERSION = '20261124-233319';   // bump on every publish; an old cached copy sees the new number and reloads itself
 const fresh = () => {   // show the signing screen, then load a fresh copy (never the cached one)
   try { sessionStorage.setItem('jv_reload', '1'); } catch (e) {}
   const R = document.getElementById('reload'); R.classList.remove('out'); R.hidden = false;
@@ -294,6 +294,21 @@ const KEY = (() => { const m = location.hash.match(/k=([\w-]+)/); let k = m ? m[
 if (KEY && !/k=/.test(location.hash)) history.replaceState(null, '', location.pathname + '#k=' + KEY);   // so Add to Home Screen keeps the key
 const $ = id => document.getElementById(id);
 const picked = new Set(); let booked = new Set(); let editing = null;
+// John's other bookings, vacations, anything on his calendars (John 2026-11-24): public 'free' check, busy times only, never details
+const busyAll = new Set(), busyAsked = new Set();
+function freeFetch(dates, tries = 1) {
+  const c = new AbortController(), t = setTimeout(() => c.abort(), 10000);   // Google sometimes stalls a reply
+  return fetch(API, {method: 'POST', body: JSON.stringify({action: 'free', dates}), signal: c.signal}).then(r => r.json())
+    .then(r => { clearTimeout(t); if (!r.ok) throw new Error('no'); return r.days; }, e => { clearTimeout(t); if (tries > 0) return freeFetch(dates, tries - 1); throw e; });
+}
+function loadBusy(y, m) {
+  const key = `${y}-${m}`; if (busyAsked.has(key)) return; busyAsked.add(key);
+  const t0 = new Date(); t0.setHours(0, 0, 0, 0); const ds = [];
+  for (let d = 1; d <= new Date(y, m + 1, 0).getDate(); d++) { const dt = new Date(y, m, d); if (dt >= t0) ds.push(ymd(dt)); }
+  if (!ds.length) return;
+  freeFetch(ds).then(days => { let ch = false; Object.keys(days).forEach(k => { if (!days[k].open && !busyAll.has(k)) { busyAll.add(k); ch = true; } }); if (ch) drawCal(); })
+    .catch(() => busyAsked.delete(key));
+}
 const today = new Date(); today.setHours(0,0,0,0);
 let view = new Date(today.getFullYear(), today.getMonth(), 1);
 const MONTH = ['January','February','March','April','May','June','July','August','September','October','November','December'];
@@ -333,7 +348,7 @@ function paint() {
 
 function drawCal() {
   const C = $('cal'); C.innerHTML = '';
-  const y = view.getFullYear(), m = view.getMonth();
+  const y = view.getFullYear(), m = view.getMonth(); loadBusy(y, m);
   const head = document.createElement('div'); head.className = 'cal-head';
   const prev = document.createElement('button'); prev.type = 'button'; prev.textContent = '‹'; prev.setAttribute('aria-label', 'Previous month');
   prev.disabled = y === today.getFullYear() && m === today.getMonth(); prev.onclick = () => { view = new Date(y, m - 1, 1); drawCal(); };
@@ -348,8 +363,8 @@ function drawCal() {
   for (let d = 1; d <= days; d++) {
     const dt = new Date(y, m, d), k = ymd(dt), b = document.createElement('button'); b.type = 'button'; b.textContent = d;
     b.disabled = dt < today; b.setAttribute('aria-pressed', picked.has(k));
-    b.setAttribute('aria-label', `${DOW[dt.getDay()]} ${MONTH[m]} ${d}${booked.has(k) ? ', already booked' : ''}`);
-    if (picked.has(k)) b.classList.add('on'); if (booked.has(k)) b.classList.add('booked');
+    b.setAttribute('aria-label', `${DOW[dt.getDay()]} ${MONTH[m]} ${d}${booked.has(k) || busyAll.has(k) ? ', already booked' : ''}`);
+    if (picked.has(k)) b.classList.add('on'); if (booked.has(k) || busyAll.has(k)) b.classList.add('booked');
     b.onclick = () => { quickOff(); if (editing) { picked.clear(); picked.add(k); } else picked.has(k) ? picked.delete(k) : picked.add(k); drawCal(); paint(); };
     g.appendChild(b);
   }
